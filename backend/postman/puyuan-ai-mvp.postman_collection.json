@@ -1,0 +1,628 @@
+{
+    "info":  {
+                 "name":  "Puyuan AI MVP API",
+                 "_postman_id":  "7f37954b-7f2a-4f89-a67d-2f369e4f4e44",
+                 "description":  "MVP backend API collection with sample requests and responses.",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "variable":  [
+                     {
+                         "key":  "base_url",
+                         "value":  "http://127.0.0.1:8080"
+                     },
+                     {
+                         "key":  "tenant_id",
+                         "value":  "2001"
+                     },
+                     {
+                         "key":  "request_id",
+                         "value":  "req-postman-demo"
+                     },
+                     {
+                         "key":  "idempotency_key",
+                         "value":  "idem-postman-demo-001"
+                     },
+                     {
+                         "key":  "plugin_id",
+                         "value":  "ai_image_gen_v1"
+                     },
+                     {
+                         "key":  "order_no",
+                         "value":  "RC20260518001"
+                     },
+                     {
+                         "key":  "tenant_id_admin",
+                         "value":  "2001"
+                     },
+                     {
+                         "key":  "access_token",
+                         "value":  "token-1001-2001"
+                     }
+                 ],
+    "item":  [
+                 {
+                     "name":  "Auth",
+                     "item":  [
+                                  {
+                                      "name":  "POST /api/v1/auth/login",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "description":  "Sample response: { code:0, message:\u0027ok\u0027, data:{ access_token, expires_in, user_id, tenant_id, role_code }, request_id }",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"mobile\": \"13800000001\",\n  \"verify_code\": \"123456\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/tenant/profile",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/tenant/profile",
+                                                      "description":  "Sample response: { code:0, message:\u0027ok\u0027, data:{ tenant_id, tenant_code, tenant_name, tenant_status, user_id, role_code }, request_id }"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Account",
+                     "item":  [
+                                  {
+                                      "name":  "GET /api/v1/account/balance",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/account/balance",
+                                                      "description":  "Sample response data: { token_balance, storage_used_gb, storage_free_quota_gb, storage_extra_gb, expire_date }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/account/ledger",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/account/ledger?page=1\u0026page_size=20\u0026entry_type=debit",
+                                                      "description":  "Sample response data: { list:[{ biz_no, entry_type, direction, token_amount, cash_amount, balance_after, plugin_id, occurred_at }], page, page_size, total }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/account/recharge/orders",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Idempotency-Key",
+                                                                         "value":  "{{idempotency_key}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/account/recharge/orders",
+                                                      "description":  "Sample response data: { order_no, amount, token_grant, pay_status }",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"amount\": 12.34,\n  \"pay_channel\": \"wechat_pay\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/account/recharge/orders",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/account/recharge/orders?page=1\u0026page_size=20\u0026pay_status=paid",
+                                                      "description":  "Sample response data: { list:[{ order_no, amount, token_grant, pay_channel, pay_status, paid_at, created_at }], page, page_size, total }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/account/recharge/orders/{order_no}/confirm",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Idempotency-Key",
+                                                                         "value":  "{{idempotency_key}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/account/recharge/orders/{{order_no}}/confirm",
+                                                      "description":  "Sample response data: { order_no, pay_result, pay_status }",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"pay_txn_no\": \"txn-demo-001\",\n  \"pay_result\": \"paid\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Plugins",
+                     "item":  [
+                                  {
+                                      "name":  "GET /api/v1/plugins",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/plugins",
+                                                      "description":  "Sample response data: [{ plugin_id, name, version, billing_type, enabled }]"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/plugins/{plugin_id}/enable",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/plugins/{{plugin_id}}/enable",
+                                                      "description":  "Sample response data: { plugin_id, enabled }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/plugins/{plugin_id}/disable",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/plugins/{{plugin_id}}/disable",
+                                                      "description":  "Sample response data: { plugin_id, enabled }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/plugins/{plugin_id}/invoke",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Idempotency-Key",
+                                                                         "value":  "{{idempotency_key}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/plugins/{{plugin_id}}/invoke",
+                                                      "description":  "Sample response data: { result, token_used, balance_remaining }",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"payload\": {\n    \"prompt\": \"Generate a product image\"\n  }\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Billing",
+                     "item":  [
+                                  {
+                                      "name":  "GET /api/v1/billing/statements/daily",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/billing/statements/daily?date=2026-05-18",
+                                                      "description":  "Sample response data: { stat_date, token_in, token_out, call_count, amount_recharge, amount_refund }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/billing/statements/monthly",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Tenant-Id",
+                                                                         "value":  "{{tenant_id}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/billing/statements/monthly?month=2026-05",
+                                                      "description":  "Sample response data: { month, token_in, token_out, call_count, amount_recharge, amount_refund }"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Admin",
+                     "item":  [
+                                  {
+                                      "name":  "GET /api/v1/admin/tenants",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/tenants?page=1\u0026page_size=20",
+                                                      "description":  "Sample response data: { list:[{ tenant_id, tenant_code, tenant_name, status, level }], page, page_size, total }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/admin/tenants/{tenant_id}/freeze",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/tenants/{{tenant_id_admin}}/freeze",
+                                                      "description":  "Sample response data: { tenant_id, status }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/admin/plugins",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/plugins?page=1\u0026page_size=20",
+                                                      "description":  "Sample response data: { list, page, page_size, total }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/admin/plugins",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/plugins",
+                                                      "description":  "Sample response data: { plugin_id, status }",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"plugin_id\": \"ai_demo_v1\",\n  \"name\": \"AI Demo\",\n  \"version\": \"1.0.0\",\n  \"backend_api\": \"http://plugin-demo/api/invoke\",\n  \"frontend_entry\": \"/plugins/demo\",\n  \"billing_type\": \"token\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "PATCH /api/v1/admin/plugins/{plugin_id}",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/plugins/{{plugin_id}}",
+                                                      "description":  "Sample response data: { plugin_id, status }",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"name\": \"AI Image Plugin v2\",\n  \"version\": \"1.0.1\",\n  \"billing_type\": \"token\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/admin/plugins/{plugin_id}/publish",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/plugins/{{plugin_id}}/publish",
+                                                      "description":  "Sample response data: { plugin_id, mode, tenant_count }",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"mode\": \"partial\",\n  \"tenant_ids\": [2001, 2002]\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "DELETE /api/v1/admin/plugins/{plugin_id}",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/plugins/{{plugin_id}}",
+                                                      "description":  "Sample response data: { plugin_id, status }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/admin/pricing",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/pricing",
+                                                      "description":  "Sample response data: { token_price_per_1k, storage_price_per_gb_month, free_token_quota_month, free_storage_quota_gb }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "PUT /api/v1/admin/pricing",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/pricing",
+                                                      "description":  "Sample response: same structure as request in data field.",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"token_price_per_1k\": 1.2,\n  \"storage_price_per_gb_month\": 0.5,\n  \"free_token_quota_month\": 100000,\n  \"free_storage_quota_gb\": 5\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/admin/billing/dashboard",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/billing/dashboard",
+                                                      "description":  "Sample response data: { total_calls, total_token_used, total_recharge_amount, gross_margin_rate }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/admin/billing/recharge-orders",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/billing/recharge-orders?page=1\u0026page_size=20\u0026tenant_id={{tenant_id_admin}}",
+                                                      "description":  "Sample response data: { list:[{ order_no, tenant_id, amount, token_grant, pay_channel, pay_status, paid_at, created_at }], page, page_size, total }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "POST /api/v1/admin/tenants/{tenant_id}/unfreeze",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/tenants/{{tenant_id_admin}}/unfreeze",
+                                                      "description":  "Sample response data: { tenant_id, status }"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "PUT /api/v1/admin/tenants/{tenant_id}/level",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/tenants/{{tenant_id_admin}}/level",
+                                                      "description":  "Sample response data: { tenant_id, level }",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"level\": \"vip\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "GET /api/v1/admin/audit",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-Request-Id",
+                                                                         "value":  "{{request_id}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{base_url}}/api/v1/admin/audit?page=1\u0026page_size=20\u0026tenant_id={{tenant_id_admin}}\u0026action=plugin_invoke",
+                                                      "description":  "Sample response data: { list:[{ id, tenant_id, operator_id, action, target_type, target_id, detail_json, created_at }], page, page_size, total }"
+                                                  }
+                                  }
+                              ]
+                 }
+             ]
+}

@@ -1,0 +1,49 @@
+锘?root {
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f5f7fb;
+}
+
+.layout {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #0f172a;
+  color: #fff;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 14px;
+}
+
+.topbar a {
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.topbar a.router-link-active {
+  color: #fff;
+  font-weight: 700;
+}
+
+.topbar .logout {
+  border: 1px solid #475569;
+  border-radius: 6px;
+  background: transparent;
+  color: #e2e8f0;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.content {
+  padding: 16px 20px;
+}

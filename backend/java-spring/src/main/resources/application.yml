@@ -1,0 +1,31 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      force-request: true
+      force-response: true
+
+spring:
+  application:
+    name: platform-api
+  messages:
+    encoding: UTF-8
+  jackson:
+    # MEMORY: enforce snake_case globally so backend JSON contracts stay aligned with openapi-mvp.yaml and frontend SDK keys.
+    property-naming-strategy: SNAKE_CASE
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  security:
+    # MEMORY: profile and role checks are handled in gateway/service layer later; keep controller stubs stateless for fast parallel development.
+    enable-auth-check: false
+  billing:
+    # MEMORY: timeout is preset to 30s because upstream model APIs can be slow; this avoids premature timeout during MVP integration.
+    upstream-timeout-seconds: 30

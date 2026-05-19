@@ -1,0 +1,34 @@
+﻿server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/puyuan_ai_mvp?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: 123456
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      table-underline: true
+
+logging:
+  level:
+    com.puyuanmaoshan.platform: debug
+    org.springframework.web: info
+    com.baomidou.mybatisplus: info
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html

@@ -1,0 +1,16 @@
+- [x] 创建 favicon.ico 文件（解决 404 错误）
+- [x] 移除 adminAuth.ts 调试日志（验证后移除）
+- [x] 更新 CLAUDE.md 记忆文件（2026-05-19）：
+  - 记录联调结果、修复内容、完成状态
+- [ ] 修复前端字段名不匹配问题（2026-05-19）：
+  - 修复 AdminPluginsPage.vue 字段名：`plugin_id` → `pluginId`、`billing_type` → `billingType`
+  - 修复 AdminPricingPage.vue 字段名：`token_price_per_1k` → `tokenPricePer1k`、`storage_price_per_gb_month` → `storagePricePerGbMonth` 等
+  - 修复 AdminPricingPage.vue 保存后未重新加载：添加 `await loadConfig()` 调用
+- [x] 创建 favicon.ico 文件（解决 404 错误）
+- [x] 移除 adminAuth.ts 调试日志（验证后移除）
+- [x] 更新 CLAUDE.md 记忆文件（2026-05-19）：
+  - 记录联调结果、修复内容、完成状态
+- [x] 修复前端字段名不匹配问题（2026-05-19）：
+  - 修复 AdminPluginsPage.vue 字段名：`plugin_id` → `pluginId`、`billing_type` → `billingType`
+  - 修复 AdminPricingPage.vue 字段名：`token_price_per_1k` → `tokenPricePer1k`、`storage_price_per_gb_month` → `storagePricePerGbMonth` 等
+  - 修复 AdminPricingPage.vue 保存后未重新加载：添加 `await loadConfig()` 调用

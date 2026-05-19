@@ -1,0 +1,841 @@
+openapi: 3.0.3
+info:
+  title: Puyuan AI Platform API (MVP)
+  version: 1.0.0
+  description: MVP API for merchant platform, billing, plugins and admin operations.
+servers:
+  - url: https://api.example.com
+    description: Production
+  - url: https://staging-api.example.com
+    description: Staging
+tags:
+  - name: Auth
+  - name: Account
+  - name: Plugins
+  - name: Billing
+  - name: Admin
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login by mobile code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoginResponse'
+  /api/v1/tenant/profile:
+    get:
+      tags: [Auth]
+      summary: Get current tenant and user profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProfileResponse'
+  /api/v1/account/balance:
+    get:
+      tags: [Account]
+      summary: Query account balance
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+      responses:
+        '200':
+          description: Balance response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BalanceResponse'
+  /api/v1/account/ledger:
+    get:
+      tags: [Account]
+      summary: Query ledger records
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: entry_type
+          schema:
+            type: string
+            enum: [recharge, debit, refund, adjust]
+      responses:
+        '200':
+          description: Ledger list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LedgerPageResponse'
+  /api/v1/account/recharge/orders:
+    post:
+      tags: [Account]
+      summary: Create recharge order
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRechargeOrderRequest'
+      responses:
+        '200':
+          description: Created order
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RechargeOrderResponse'
+  /api/v1/account/recharge/orders/{order_no}/confirm:
+    post:
+      tags: [Account]
+      summary: Confirm payment result
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+        - name: order_no
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RechargeConfirmRequest'
+      responses:
+        '200':
+          description: Confirm result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/plugins:
+    get:
+      tags: [Plugins]
+      summary: Query available plugins
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+      responses:
+        '200':
+          description: Plugin list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PluginItem'
+  /api/v1/plugins/{plugin_id}/enable:
+    post:
+      tags: [Plugins]
+      summary: Enable plugin for tenant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+        - name: plugin_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Enable result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/plugins/{plugin_id}/disable:
+    post:
+      tags: [Plugins]
+      summary: Disable plugin for tenant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+        - name: plugin_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Disable result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/plugins/{plugin_id}/invoke:
+    post:
+      tags: [Plugins]
+      summary: Invoke plugin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: plugin_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PluginInvokeRequest'
+      responses:
+        '200':
+          description: Invocation result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PluginInvokeResponse'
+  /api/v1/billing/statements/daily:
+    get:
+      tags: [Billing]
+      summary: Query daily statement
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+        - in: query
+          name: date
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Daily statement
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DailyStatement'
+  /api/v1/billing/statements/monthly:
+    get:
+      tags: [Billing]
+      summary: Query monthly statement
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/XRequestId'
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]{4}-(0[1-9]|1[0-2])$'
+      responses:
+        '200':
+          description: Monthly statement
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MonthlyStatement'
+  /api/v1/admin/tenants:
+    get:
+      tags: [Admin]
+      summary: Query tenants list
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Tenant list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TenantPageResponse'
+  /api/v1/admin/tenants/{tenant_id}/freeze:
+    post:
+      tags: [Admin]
+      summary: Freeze tenant
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Freeze result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/admin/plugins:
+    post:
+      tags: [Admin]
+      summary: Create plugin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePluginRequest'
+      responses:
+        '200':
+          description: Plugin created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/admin/plugins/{plugin_id}:
+    patch:
+      tags: [Admin]
+      summary: Update plugin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+        - name: plugin_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePluginRequest'
+      responses:
+        '200':
+          description: Plugin updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/admin/plugins/{plugin_id}/publish:
+    post:
+      tags: [Admin]
+      summary: Publish plugin
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+        - name: plugin_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishPluginRequest'
+      responses:
+        '200':
+          description: Publish result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/admin/pricing:
+    get:
+      tags: [Admin]
+      summary: Query pricing config
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+      responses:
+        '200':
+          description: Pricing config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PricingConfig'
+    put:
+      tags: [Admin]
+      summary: Update pricing config
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingConfig'
+      responses:
+        '200':
+          description: Update result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/admin/billing/dashboard:
+    get:
+      tags: [Admin]
+      summary: Query billing dashboard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XRequestId'
+      responses:
+        '200':
+          description: Dashboard
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BillingDashboard'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    XTenantId:
+      in: header
+      name: X-Tenant-Id
+      required: true
+      schema:
+        type: string
+    XRequestId:
+      in: header
+      name: X-Request-Id
+      required: true
+      schema:
+        type: string
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema:
+        type: string
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          type: object
+          nullable: true
+        request_id:
+          type: string
+      required: [code, message, request_id]
+    LoginRequest:
+      type: object
+      properties:
+        mobile:
+          type: string
+        verify_code:
+          type: string
+      required: [mobile, verify_code]
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+        user_id:
+          type: integer
+          format: int64
+        tenant_id:
+          type: integer
+          format: int64
+        role_code:
+          type: string
+    ProfileResponse:
+      type: object
+      properties:
+        tenant_id:
+          type: integer
+          format: int64
+        tenant_code:
+          type: string
+        tenant_name:
+          type: string
+        tenant_status:
+          type: integer
+        user_id:
+          type: integer
+          format: int64
+        role_code:
+          type: string
+    BalanceResponse:
+      type: object
+      properties:
+        token_balance:
+          type: integer
+          format: int64
+        storage_used_gb:
+          type: number
+          format: float
+        storage_free_quota_gb:
+          type: number
+          format: float
+        storage_extra_gb:
+          type: number
+          format: float
+        expire_date:
+          type: string
+          format: date
+    LedgerItem:
+      type: object
+      properties:
+        biz_no:
+          type: string
+        entry_type:
+          type: string
+          enum: [recharge, debit, refund, adjust]
+        direction:
+          type: string
+          enum: [in, out]
+        token_amount:
+          type: integer
+          format: int64
+        cash_amount:
+          type: number
+          format: double
+        balance_after:
+          type: integer
+          format: int64
+        plugin_id:
+          type: string
+          nullable: true
+        occurred_at:
+          type: string
+          format: date-time
+    LedgerPageResponse:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerItem'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+    CreateRechargeOrderRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+        pay_channel:
+          type: string
+      required: [amount, pay_channel]
+    RechargeOrderResponse:
+      type: object
+      properties:
+        order_no:
+          type: string
+        amount:
+          type: number
+          format: double
+        token_grant:
+          type: integer
+          format: int64
+        pay_status:
+          type: string
+    RechargeConfirmRequest:
+      type: object
+      properties:
+        pay_txn_no:
+          type: string
+        pay_result:
+          type: string
+          enum: [success, failed]
+      required: [pay_txn_no, pay_result]
+    PluginItem:
+      type: object
+      properties:
+        plugin_id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        billing_type:
+          type: string
+          enum: [token, times, free]
+        enabled:
+          type: boolean
+    PluginInvokeRequest:
+      type: object
+      description: Plugin custom payload.
+      additionalProperties: true
+    PluginInvokeResponse:
+      type: object
+      properties:
+        result:
+          type: object
+          additionalProperties: true
+        token_used:
+          type: integer
+        balance_remaining:
+          type: integer
+    DailyStatement:
+      type: object
+      properties:
+        stat_date:
+          type: string
+          format: date
+        token_in:
+          type: integer
+        token_out:
+          type: integer
+        call_count:
+          type: integer
+        amount_recharge:
+          type: number
+          format: double
+        amount_refund:
+          type: number
+          format: double
+    MonthlyStatement:
+      type: object
+      properties:
+        month:
+          type: string
+        token_in:
+          type: integer
+        token_out:
+          type: integer
+        call_count:
+          type: integer
+        amount_recharge:
+          type: number
+          format: double
+        amount_refund:
+          type: number
+          format: double
+    TenantItem:
+      type: object
+      properties:
+        tenant_id:
+          type: integer
+          format: int64
+        tenant_code:
+          type: string
+        tenant_name:
+          type: string
+        status:
+          type: integer
+        level:
+          type: string
+    TenantPageResponse:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantItem'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+    CreatePluginRequest:
+      type: object
+      properties:
+        plugin_id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        backend_api:
+          type: string
+        frontend_entry:
+          type: string
+        billing_type:
+          type: string
+          enum: [token, times, free]
+      required: [plugin_id, name, version, backend_api, billing_type]
+    UpdatePluginRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        backend_api:
+          type: string
+        frontend_entry:
+          type: string
+        billing_type:
+          type: string
+          enum: [token, times, free]
+    PublishPluginRequest:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [gray, full]
+        tenant_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: Required when mode=gray
+      required: [mode]
+    PricingConfig:
+      type: object
+      properties:
+        token_price_per_1k:
+          type: number
+          format: double
+        storage_price_per_gb_month:
+          type: number
+          format: double
+        free_token_quota_month:
+          type: integer
+        free_storage_quota_gb:
+          type: number
+          format: double
+    BillingDashboard:
+      type: object
+      properties:
+        total_calls:
+          type: integer
+        total_token_used:
+          type: integer
+        total_recharge_amount:
+          type: number
+          format: double
+        gross_margin_rate:
+          type: number
+          format: float
