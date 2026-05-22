@@ -1,27 +1,29 @@
 <template>
   <section>
     <header class="row-head">
-      <h1>插件列表</h1>
+      <h1>应用市场</h1>
       <button @click="loadPlugins" :disabled="loading">{{ loading ? "加载中..." : "刷新" }}</button>
     </header>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
     <ul class="plugin-grid">
-      <li v-for="item in plugins" :key="item.plugin_id" class="plugin-card" :class="{ disabled: !item.enabled }">
+      <li v-for="item in plugins" :key="item.plugin_id" class="plugin-card">
         <div class="plugin-info" @click="openPlugin(item)">
-          <strong>{{ item.name }}</strong>
-          <p class="sub">{{ item.plugin_id }} | {{ item.version }} | {{ item.billing_type }}</p>
+          <div class="plugin-header">
+            <strong class="plugin-name">{{ item.name }}</strong>
+            <span :class="'status-' + item.lifecycle_status">{{ statusText(item.lifecycle_status) }}</span>
+          </div>
+          <p class="sub">{{ item.plugin_id }} | v{{ item.version }}</p>
+          <p class="billing-hint">{{ billingHint(item.billing_type) }}</p>
         </div>
         <div class="actions" @click.stop>
-          <span :class="item.enabled ? 'tag-on' : 'tag-off'">{{ item.enabled ? "已启用" : "已禁用" }}</span>
-          <button v-if="!item.enabled" @click="togglePlugin(item.plugin_id, true)">启用</button>
-          <button v-else @click="togglePlugin(item.plugin_id, false)">禁用</button>
+          <button @click="openPlugin(item)">{{ item.lifecycle_status === 'gray' ? '灰度体验' : '立即使用' }}</button>
         </div>
       </li>
     </ul>
 
-    <p v-if="!loading && plugins.length === 0" class="empty">暂无插件记录</p>
+    <p v-if="!loading && plugins.length === 0" class="empty">暂无可用插件</p>
   </section>
 </template>
 
@@ -35,7 +37,7 @@ interface PluginItem {
   name: string;
   version: string;
   billing_type: string;
-  enabled: boolean;
+  lifecycle_status: "enabled" | "gray";
 }
 
 interface PluginListResponse {
@@ -59,7 +61,6 @@ const PLUGIN_ROUTES: Record<string, string> = {
 };
 
 function openPlugin(item: PluginItem) {
-  if (!item.enabled) return;
   const routePath = PLUGIN_ROUTES[item.plugin_id] || `/plugins/${item.plugin_id}`;
   router.push(routePath);
 }
@@ -77,7 +78,7 @@ async function loadPlugins() {
   loading.value = true;
   errorMessage.value = "";
   try {
-    const response = await fetch("/api/v1/plugins", {
+    const response = await fetch("/api/v1/plugins/visible", {
       method: "GET",
       headers: buildHeaders(),
     });
@@ -97,20 +98,21 @@ async function loadPlugins() {
   }
 }
 
-async function togglePlugin(pluginId: string, enable: boolean) {
-  errorMessage.value = "";
-  try {
-    const response = await fetch(`/api/v1/plugins/${pluginId}/${enable ? "enable" : "disable"}`, {
-      method: "POST",
-      headers: buildHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    await loadPlugins();
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "toggle plugin failed";
-  }
+function statusText(status: string): string {
+  const map: Record<string, string> = {
+    enabled: "已上架",
+    gray: "灰度测试中",
+  };
+  return map[status] || status;
+}
+
+function billingHint(billingType: string): string {
+  const map: Record<string, string> = {
+    "token": "按 Token 计费",
+    "subscription": "订阅制",
+    "one_time": "一次性付费",
+  };
+  return map[billingType] || billingType;
 }
 
 onMounted(() => {
@@ -126,23 +128,29 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
+h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
 .plugin-grid {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .plugin-card {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: calc(var(--radius) - 2px);
-  padding: 12px;
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   cursor: pointer;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -152,12 +160,41 @@ onMounted(() => {
   box-shadow: var(--shadow-md);
 }
 
-.plugin-card.disabled {
-  opacity: 0.6;
+.plugin-info {
+  flex: 1;
+  min-width: 0;
 }
 
-.plugin-card.disabled .plugin-info {
-  cursor: not-allowed;
+.plugin-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.plugin-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.status-enabled {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: hsl(142 71% 45% / 0.15);
+  color: hsl(142 71% 45%);
+}
+
+.status-gray {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: hsl(260 60% 60% / 0.15);
+  color: hsl(260 60% 60%);
 }
 
 .sub {
@@ -166,50 +203,39 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.tag-on,
-.tag-off {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 20px;
+.billing-hint {
+  color: hsl(var(--muted-foreground));
+  margin: 2px 0 0;
   font-size: 12px;
 }
 
-.tag-on {
-  background: hsl(var(--primary) / 0.1);
-  color: hsl(var(--primary));
+.actions {
+  flex-shrink: 0;
 }
 
-.tag-off {
-  background: hsl(var(--destructive) / 0.1);
-  color: hsl(var(--destructive));
-}
-
-button {
+.actions button {
   border: none;
   border-radius: calc(var(--radius) - 4px);
-  padding: 6px 10px;
+  padding: 8px 16px;
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.actions button:hover {
+  opacity: 0.9;
 }
 
 .error {
   color: hsl(var(--destructive));
+  margin-bottom: 12px;
 }
 
 .empty {
   color: hsl(var(--muted-foreground));
+  text-align: center;
+  padding: 48px 24px;
 }
 </style>

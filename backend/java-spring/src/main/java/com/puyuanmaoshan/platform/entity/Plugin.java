@@ -36,6 +36,33 @@ public class Plugin {
     @TableField("frontend_entry")
     private String frontendEntry;
 
+    @TableField("description")
+    private String description;
+
+    @TableField("icon_url")
+    private String iconUrl;
+
+    @TableField("frontend_path")
+    private String frontendPath;
+
+    @TableField("lifecycle_status")
+    private String lifecycleStatus;
+
+    @TableField("created_by")
+    private Long createdBy;
+
+    @TableField("tested_at")
+    private LocalDateTime testedAt;
+
+    @TableField("published_at")
+    private LocalDateTime publishedAt;
+
+    @TableField("gray_tenant_ids")
+    private String grayTenantIds;
+
+    @TableField("backend_deploy_config")
+    private String backendDeployConfig;
+
     @TableField("billing_type")
     private String billingType;
 
