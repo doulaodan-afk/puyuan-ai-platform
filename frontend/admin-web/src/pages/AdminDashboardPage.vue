@@ -65,35 +65,72 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 24px;
+}
+
+h1 {
+  color: hsl(var(--foreground));
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .cards {
-  margin-top: 12px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  gap: 16px;
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #d8e0f0;
-  border-radius: 8px;
-  padding: 12px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 20px;
+  /* 添加内阴影增加层次感 */
+  box-shadow: inset 0 1px 2px hsl(0 0% 0% / 0.05);
+}
+
+.card h3 {
+  margin: 0 0 8px 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .value {
-  font-size: 24px;
+  font-size: 28px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
 }
 
-button {
+.btn {
+  padding: 8px 16px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  background: #2e5fd7;
-  color: #fff;
+  border-radius: calc(var(--radius) - 4px);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .error {
-  color: #c83a28;
+  color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.1);
+  padding: 12px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  margin-bottom: 16px;
+  border: 1px solid hsl(var(--destructive) / 0.3);
 }
 </style>

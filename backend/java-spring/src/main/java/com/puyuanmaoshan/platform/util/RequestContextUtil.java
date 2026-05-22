@@ -8,8 +8,44 @@ import java.time.format.DateTimeFormatter;
 
 public final class RequestContextUtil {
     private static final DateTimeFormatter REQUEST_TS_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final ThreadLocal<RequestContext> CONTEXT = new ThreadLocal<>();
 
     private RequestContextUtil() {
+    }
+
+    public static void setContext(RequestContext context) {
+        CONTEXT.set(context);
+    }
+
+    public static void clearContext() {
+        CONTEXT.remove();
+    }
+
+    public static Long getUserId() {
+        RequestContext context = CONTEXT.get();
+        return context == null ? null : context.userId();
+    }
+
+    public static Long getCurrentUserId() {
+        Long userId = getUserId();
+        if (userId == null) {
+            throw new com.puyuanmaoshan.platform.exception.AppException(
+                    com.puyuanmaoshan.platform.enums.ErrorCode.UNAUTHORIZED, "User not authenticated");
+        }
+        return userId;
+    }
+
+    public static String getRemoteAddr() {
+        RequestContext context = CONTEXT.get();
+        return context == null ? null : context.remoteAddr();
+    }
+
+    public static long parseUserId(String userIdHeader) {
+        try {
+            return Long.parseLong(userIdHeader);
+        } catch (Exception ex) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "invalid user id");
+        }
     }
 
     public static long parseTenantId(String tenantIdHeader) {
@@ -45,4 +81,6 @@ public final class RequestContextUtil {
             throw new AppException(ErrorCode.UNAUTHORIZED, "invalid user id in token");
         }
     }
+
+    public record RequestContext(Long userId, String remoteAddr) {}
 }

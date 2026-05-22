@@ -1,0 +1,44 @@
+/*
+  暗色主题变量
+  Linear / Vercel 风格 - Deep, true near-black canvas
+*/
+
+@import '../design-tokens.scss';
+
+// 应用暗色主题变量
+$background: $background-dark;
+$foreground: $foreground-dark;
+$card: $card-dark;
+$card-foreground: $card-foreground-dark;
+$popover: $popover-dark;
+$popover-foreground: $popover-foreground-dark;
+$primary: $primary-dark;
+$primary-foreground: $primary-foreground-dark;
+$secondary: $secondary-dark;
+$secondary-foreground: $secondary-foreground-dark;
+$muted: $muted-dark;
+$muted-foreground: $muted-foreground-dark;
+$accent: $accent-dark;
+$accent-foreground: $accent-foreground-dark;
+$destructive: $destructive-dark;
+$destructive-foreground: $destructive-foreground-dark;
+$border: $border-dark;
+$input: $input-dark;
+$ring: $ring-dark;
+
+$chart-1: $chart-1-dark;
+$chart-2: $chart-2-dark;
+$chart-3: $chart-3-dark;
+$chart-4: $chart-4-dark;
+$chart-5: $chart-5-dark;
+
+$accent-blue: $accent-blue-dark;
+$accent-blue-foreground: $accent-blue-foreground-dark;
+
+$shadow-sm: $shadow-sm-dark;
+$shadow-md: $shadow-md-dark;
+$shadow-lg: $shadow-lg-dark;
+
+$gradient-surface: $gradient-surface-dark;
+$gradient-ink: $gradient-ink-dark;
+$gradient-accent: $gradient-accent-dark;

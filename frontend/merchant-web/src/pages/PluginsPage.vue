@@ -8,12 +8,12 @@
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
     <ul class="plugin-grid">
-      <li v-for="item in plugins" :key="item.plugin_id" class="plugin-card">
-        <div>
+      <li v-for="item in plugins" :key="item.plugin_id" class="plugin-card" :class="{ disabled: !item.enabled }">
+        <div class="plugin-info" @click="openPlugin(item)">
           <strong>{{ item.name }}</strong>
           <p class="sub">{{ item.plugin_id }} | {{ item.version }} | {{ item.billing_type }}</p>
         </div>
-        <div class="actions">
+        <div class="actions" @click.stop>
           <span :class="item.enabled ? 'tag-on' : 'tag-off'">{{ item.enabled ? "已启用" : "已禁用" }}</span>
           <button v-if="!item.enabled" @click="togglePlugin(item.plugin_id, true)">启用</button>
           <button v-else @click="togglePlugin(item.plugin_id, false)">禁用</button>
@@ -27,6 +27,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 
 interface PluginItem {
@@ -43,10 +44,25 @@ interface PluginListResponse {
   data: PluginItem[];
 }
 
+const router = useRouter();
 const auth = useAuthStore();
 const plugins = ref<PluginItem[]>([]);
 const loading = ref(false);
 const errorMessage = ref("");
+
+// 插件ID到路由的映射
+const PLUGIN_ROUTES: Record<string, string> = {
+  "ai_script_gen": "/plugins/ai-script",
+  "ai_translate": "/plugins/ai-translate",
+  "ai_design_assistant": "/design-assistant",
+  "ai_image_gen": "/plugins/ai-image",
+};
+
+function openPlugin(item: PluginItem) {
+  if (!item.enabled) return;
+  const routePath = PLUGIN_ROUTES[item.plugin_id] || `/plugins/${item.plugin_id}`;
+  router.push(routePath);
+}
 
 function buildHeaders(extra?: Record<string, string>): HeadersInit {
   return {
@@ -119,18 +135,33 @@ onMounted(() => {
 }
 
 .plugin-card {
-  background: #fff;
-  border: 1px solid #d8e0f0;
-  border-radius: 8px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
   padding: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.plugin-card:hover {
+  border-color: hsl(var(--accent-blue));
+  box-shadow: var(--shadow-md);
+}
+
+.plugin-card.disabled {
+  opacity: 0.6;
+}
+
+.plugin-card.disabled .plugin-info {
+  cursor: not-allowed;
 }
 
 .sub {
-  color: #5c6a82;
+  color: hsl(var(--muted-foreground));
   margin: 4px 0 0;
   font-size: 12px;
 }
@@ -151,21 +182,21 @@ onMounted(() => {
 }
 
 .tag-on {
-  background: #e6f7ef;
-  color: #1a7f48;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
 }
 
 .tag-off {
-  background: #ffecec;
-  color: #a83838;
+  background: hsl(var(--destructive) / 0.1);
+  color: hsl(var(--destructive));
 }
 
 button {
   border: none;
-  border-radius: 6px;
+  border-radius: calc(var(--radius) - 4px);
   padding: 6px 10px;
-  background: #2e5fd7;
-  color: #fff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   cursor: pointer;
 }
 
@@ -175,10 +206,10 @@ button:disabled {
 }
 
 .error {
-  color: #c83a28;
+  color: hsl(var(--destructive));
 }
 
 .empty {
-  color: #5c6a82;
+  color: hsl(var(--muted-foreground));
 }
 </style>

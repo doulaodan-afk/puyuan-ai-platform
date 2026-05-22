@@ -14,6 +14,10 @@ export interface AdminRouteMeta extends Record<string, unknown> {
 
 export const adminRoutes: RouteRecordRaw[] = [
   {
+    path: "/",
+    redirect: "/admin",
+  },
+  {
     path: "/admin/login",
     name: "AdminLogin",
     component: () => import("../pages/AdminLoginPage.vue"),
@@ -80,6 +84,16 @@ export const adminRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: "/admin/supplier-review",
+    name: "AdminSupplierReview",
+    component: () => import("../pages/AdminSupplierReviewPage.vue"),
+    meta: {
+      title: "面料商入驻审核",
+      requiresAuth: true,
+      roles: ["platform_super_admin", "platform_ops"],
+    },
+  },
+  {
     path: "/admin/audit",
     name: "AdminAudit",
     component: () => import("../pages/AdminAuditPage.vue"),
@@ -87,6 +101,16 @@ export const adminRoutes: RouteRecordRaw[] = [
       title: "审计日志",
       requiresAuth: true,
       roles: ["platform_super_admin", "platform_auditor"],
+    },
+  },
+  {
+    path: "/admin/system-config",
+    name: "AdminSystemConfig",
+    component: () => import("../pages/AdminSystemConfigPage.vue"),
+    meta: {
+      title: "系统配置管理",
+      requiresAuth: true,
+      roles: ["platform_super_admin"],
     },
   },
 ];

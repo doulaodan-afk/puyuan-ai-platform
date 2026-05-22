@@ -1,0 +1,183 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 100px;
+}
+
+.balance-tip {
+  background: #fff8e1;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tip-text {
+  font-size: 13px;
+  color: #f57c00;
+}
+
+.packages-section {
+  padding: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.packages-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.package-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  border: 2px solid transparent;
+  position: relative;
+  transition: all 0.3s;
+
+  &.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  }
+}
+
+.recommended-tag {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 0 12px 0 12px;
+  font-weight: bold;
+}
+
+.package-name {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.package-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.currency {
+  font-size: 14px;
+  color: #ff4d4f;
+}
+
+.price {
+  font-size: 28px;
+  font-weight: bold;
+  color: #ff4d4f;
+}
+
+.package-tokens {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.token-count {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.token-unit {
+  font-size: 13px;
+  color: #999;
+}
+
+.bonus {
+  font-size: 11px;
+  color: #ff4d4f;
+  padding: 2px 6px;
+  background: rgba(255, 77, 79, 0.1);
+  border-radius: 4px;
+}
+
+.tips-section {
+  background: #ffffff;
+  margin: 0 20px 20px;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.tips-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.tips-item {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.8;
+  display: block;
+}
+
+.mock-notice {
+  margin: 0 20px 20px;
+  padding: 12px;
+  background: #fff3e0;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.mock-text {
+  font-size: 12px;
+  color: #fa8c16;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  padding: 16px 20px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.recharge-btn {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+
+  &[disabled] {
+    opacity: 0.7;
+  }
+
+  &.paying {
+    opacity: 0.7;
+  }
+
+  &::after {
+    border: none;
+  }
+}

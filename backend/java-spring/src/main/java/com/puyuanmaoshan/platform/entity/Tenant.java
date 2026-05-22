@@ -33,6 +33,9 @@ public class Tenant {
     @TableField("level")
     private String level;
 
+    @TableField("tenant_type")
+    private String tenantType;
+
     @TableField("created_at")
     private LocalDateTime createdAt;
 

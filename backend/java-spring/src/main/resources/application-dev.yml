@@ -9,6 +9,17 @@ spring:
     password: 123456
   jackson:
     property-naming-strategy: SNAKE_CASE
+  # Temporarily disable Redis to allow startup
+  # data:
+  #   redis:
+  #     host: 127.0.0.1
+  #     port: 6379
+  #     database: 0
+  #     timeout: 3000
+
+# Temporarily disable rate limiter until Redis is available
+rate-limit:
+  enabled: false
 
 mybatis-plus:
   configuration:
@@ -24,6 +35,13 @@ logging:
     com.puyuanmaoshan.platform: debug
     org.springframework.web: info
     com.baomidou.mybatisplus: info
+
+app:
+  base-url: http://localhost:8080
+  ai:
+    mock-image-url: https://via.placeholder.com/300x200
+    mock-script-response: "这是一个示例脚本"
+    mock-translate-response: "Translated text"
 
 springdoc:
   api-docs:

@@ -139,9 +139,9 @@ onMounted(() => {
 
 .card,
 .panel {
-  background: #fff;
-  border: 1px solid #d8e0f0;
-  border-radius: 8px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
   padding: 12px;
 }
 
@@ -149,38 +149,110 @@ onMounted(() => {
   margin-top: 12px;
 }
 
+.card h3,
+.panel h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card p {
+  color: hsl(var(--foreground));
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
 .filters {
   display: flex;
   gap: 8px;
+}
+
+.filters input {
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-size: 14px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  background: hsl(var(--card));
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
 }
 
-th,
-td {
-  border: 1px solid #e5ebf8;
-  padding: 8px;
+thead {
+  background: hsl(var(--secondary));
+}
+
+th {
+  padding: 12px 16px;
   text-align: left;
   font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  border-bottom: 2px solid hsl(var(--border));
+}
+
+td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+tbody tr:hover {
+  background: hsl(var(--accent));
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
 }
 
 button {
   border: none;
-  border-radius: 6px;
+  border-radius: calc(var(--radius) - 4px);
   padding: 6px 10px;
-  background: #2e5fd7;
-  color: #fff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  background: hsl(240 8% 18%);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .error {
-  color: #c83a28;
+  color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.1);
+  padding: 12px;
+  border-radius: calc(var(--radius) - 4px);
+  font-size: 14px;
+  margin-bottom: 16px;
+  border: 1px solid hsl(var(--destructive) / 0.3);
 }
 
 .empty {
-  color: #5c6a82;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  padding: 48px 24px;
+  font-size: 14px;
 }
 </style>

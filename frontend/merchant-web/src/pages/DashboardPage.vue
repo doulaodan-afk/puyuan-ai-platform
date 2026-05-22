@@ -15,7 +15,7 @@
       </article>
       <article class="card">
         <h3>已启用插件</h3>
-        <p class="value">{{ enabledPlugins }}</p>
+        <p class="value">{{ enabledPlugins.length }}</p>
         <RouterLink to="/plugins">管理插件</RouterLink>
       </article>
       <article class="card">
@@ -27,11 +27,18 @@
 
     <section class="panel">
       <h2>快捷入口</h2>
-      <div class="links">
-        <RouterLink to="/plugins/ai-image">AI 图片生成</RouterLink>
-        <RouterLink to="/plugins/ai-script">AI 脚本生成</RouterLink>
-        <RouterLink to="/billing">账单中心</RouterLink>
+      <div class="links" v-if="enabledPlugins.length > 0">
+        <div
+          v-for="plugin in enabledPlugins"
+          :key="plugin.plugin_id"
+          class="plugin-link"
+          @click="openPlugin(plugin.plugin_id)"
+        >
+          <span class="plugin-name">{{ plugin.name }}</span>
+          <span class="plugin-badge">已启用</span>
+        </div>
       </div>
+      <p v-else class="empty">暂无可用插件</p>
     </section>
 
     <section class="panel">
@@ -50,6 +57,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { merchantRequest } from "../utils/http";
 
 interface BalanceData {
@@ -58,6 +66,9 @@ interface BalanceData {
 
 interface PluginItem {
   plugin_id: string;
+  name: string;
+  version: string;
+  billing_type: string;
   enabled: boolean;
 }
 
@@ -73,14 +84,32 @@ interface LedgerData {
   list: LedgerItem[];
 }
 
+const router = useRouter();
 const loading = ref(false);
 const errorMessage = ref("");
 const balance = ref<BalanceData | null>(null);
 const plugins = ref<PluginItem[]>([]);
 const ledgerItems = ref<LedgerItem[]>([]);
 
-const enabledPlugins = computed(() => plugins.value.filter((item) => item.enabled).length);
+// 插件ID到路由的映射
+const PLUGIN_ROUTES: Record<string, string> = {
+  "ai_script_gen": "/plugins/ai-script",
+  "ai_translate": "/plugins/ai-translate",
+  "ai_design_assistant": "/design-assistant",
+  "ai_image_gen": "/plugins/ai-image",
+};
+
+const enabledPlugins = computed(() => plugins.value.filter((item) => item.enabled));
 const recentDebits = computed(() => ledgerItems.value.filter((item) => item.entry_type === "debit").length);
+
+function openPlugin(pluginId: string) {
+  const routePath = PLUGIN_ROUTES[pluginId];
+  if (routePath) {
+    router.push(routePath);
+  } else {
+    console.log("打开插件:", pluginId);
+  }
+}
 
 async function refreshAll() {
   loading.value = true;
@@ -124,9 +153,9 @@ onMounted(() => {
 
 .card,
 .panel {
-  background: #fff;
-  border: 1px solid #d8e0f0;
-  border-radius: 8px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
   padding: 12px;
 }
 
@@ -145,6 +174,37 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
+.plugin-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: hsl(var(--accent));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.plugin-link:hover {
+  background: hsl(var(--accent) / 0.8);
+  border-color: hsl(var(--primary));
+}
+
+.plugin-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.plugin-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: hsl(var(--success) / 0.2);
+  color: hsl(var(--success));
+  border-radius: 9999px;
+}
+
 .ledger-list {
   list-style: none;
   margin: 0;
@@ -156,22 +216,31 @@ onMounted(() => {
   grid-template-columns: 120px 100px 1fr;
   gap: 8px;
   padding: 8px 0;
-  border-bottom: 1px dashed #d8e0f0;
+  border-bottom: 1px dashed hsl(var(--border) / 0.5);
 }
 
 button {
   border: none;
-  border-radius: 6px;
+  border-radius: calc(var(--radius) - 4px);
   padding: 6px 10px;
-  background: #2e5fd7;
-  color: #fff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 .error {
-  color: #c83a28;
+  color: hsl(var(--destructive));
 }
 
 .empty {
-  color: #5c6a82;
+  color: hsl(var(--muted-foreground));
+}
+
+a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 </style>

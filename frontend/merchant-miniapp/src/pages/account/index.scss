@@ -1,0 +1,179 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px 60px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.mobile {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.balance-section {
+  background: #ffffff;
+  margin: -40px 20px 20px;
+  border-radius: 16px;
+  padding: 30px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.balance-label {
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.balance-amount {
+  font-size: 48px;
+  font-weight: bold;
+  color: #333;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.balance-unit {
+  font-size: 14px;
+  color: #999;
+}
+
+.balance-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+
+  &.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+  }
+
+  &:not(.primary) {
+    background: #f5f5f5;
+    color: #333;
+  }
+}
+
+.storage-section {
+  background: #ffffff;
+  margin: 0 20px 20px;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.storage-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.storage-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.storage-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.storage-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.storage-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.menu-section {
+  background: #ffffff;
+  margin: 0 20px 20px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.menu-icon {
+  font-size: 20px;
+}
+
+.menu-text {
+  flex: 1;
+  font-size: 15px;
+  color: #333;
+}
+
+.menu-arrow {
+  font-size: 24px;
+  color: #ccc;
+}
+
+.logout-section {
+  margin: 0 20px 40px;
+}
+
+.logout-btn {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-size: 15px;
+  color: #ff4d4f;
+}

@@ -16,6 +16,48 @@ public final class ApiModels {
             @NotBlank String verifyCode
     ) {}
 
+    public record WxLoginRequest(
+            @NotBlank String code,
+            WxUserInfo userInfo
+    ) {
+        public WxUserInfo getUserInfo() {
+            return userInfo;
+        }
+
+        public record WxUserInfo(
+                String nickName,
+                String avatarUrl,
+                String gender,
+                String city,
+                String province,
+                String country
+        ) {
+            public String getNickName() {
+                return nickName;
+            }
+
+            public String getAvatarUrl() {
+                return avatarUrl;
+            }
+
+            public String getGender() {
+                return gender;
+            }
+
+            public String getCity() {
+                return city;
+            }
+
+            public String getProvince() {
+                return province;
+            }
+
+            public String getCountry() {
+                return country;
+            }
+        }
+    }
+
     public record LoginResponse(
             String accessToken,
             long expiresIn,
