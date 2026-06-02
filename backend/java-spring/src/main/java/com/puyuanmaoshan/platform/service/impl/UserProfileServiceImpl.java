@@ -11,6 +11,7 @@ import com.puyuanmaoshan.platform.service.WxLoginService;
 import com.puyuanmaoshan.platform.service.UserProfileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     public UserProfileServiceImpl(UserAccountMapper userAccountMapper,
                                   OssService ossService,
-                                  WxLoginService wxLoginService) {
+                                  @Lazy WxLoginService wxLoginService) {
         this.userAccountMapper = userAccountMapper;
         this.ossService = ossService;
         this.wxLoginService = wxLoginService;
