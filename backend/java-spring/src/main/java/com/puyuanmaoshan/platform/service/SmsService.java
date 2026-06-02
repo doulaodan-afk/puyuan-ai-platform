@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -23,7 +23,7 @@ public class SmsService {
     @Autowired(required = false)
     private Client smsClient;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${aliyun.sms.sign-name:濮院毛衫}")
     private String signName;
@@ -40,7 +40,7 @@ public class SmsService {
     // 验证码过期时间（分钟）
     private static final long SMS_CODE_EXPIRE_MINUTES = 5;
 
-    public SmsService(RedisTemplate<String, Object> redisTemplate) {
+    public SmsService(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
@@ -109,14 +109,14 @@ public class SmsService {
      */
     public boolean verifySmsCode(String mobile, String code, String purpose) {
         String redisKey = buildRedisKey(mobile, purpose);
-        Object storedCode = redisTemplate.opsForValue().get(redisKey);
+        String storedCode = redisTemplate.opsForValue().get(redisKey);
 
         if (storedCode == null) {
             logger.warn("SMS code expired or not found - mobile: {}, purpose: {}", mobile, purpose);
             return false;
         }
 
-        boolean valid = storedCode.toString().equals(code);
+        boolean valid = storedCode.equals(code);
         if (valid) {
             // 验证成功后删除验证码
             redisTemplate.delete(redisKey);
