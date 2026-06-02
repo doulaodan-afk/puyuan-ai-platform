@@ -4,12 +4,12 @@ import com.aliyun.dysmsapi20170525.Client;
 import com.aliyun.dysmsapi20170525.models.SendSmsRequest;
 import com.aliyun.dysmsapi20170525.models.SendSmsResponse;
 import com.aliyun.tea.TeaException;
-import com.aliyun.teautil.Common;
 import com.aliyun.teautil.models.RuntimeOptions;
 import com.puyuanmaoshan.platform.enums.ErrorCode;
 import com.puyuanmaoshan.platform.exception.AppException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -20,23 +20,27 @@ import java.util.concurrent.TimeUnit;
 public class SmsService {
     private static final Logger logger = LoggerFactory.getLogger(SmsService.class);
 
-    private final Client smsClient;
+    @Autowired(required = false)
+    private Client smsClient;
+
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @Value("${aliyun.sms.sign-name}")
+    @Value("${aliyun.sms.sign-name:濮院毛衫}")
     private String signName;
 
-    @Value("${aliyun.sms.login-template-id}")
+    @Value("${aliyun.sms.login-template-id:SMS_474785772}")
     private String loginTemplateId;
 
-    @Value("${aliyun.sms.register-template-id}")
+    @Value("${aliyun.sms.register-template-id:SMS_474980747}")
     private String registerTemplateId;
+
+    @Value("${aliyun.sms.enabled:false}")
+    private boolean smsEnabled;
 
     // 验证码过期时间（分钟）
     private static final long SMS_CODE_EXPIRE_MINUTES = 5;
 
-    public SmsService(Client smsClient, RedisTemplate<String, Object> redisTemplate) {
-        this.smsClient = smsClient;
+    public SmsService(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
@@ -60,6 +64,14 @@ public class SmsService {
     private void sendSmsCode(String mobile, String templateId, String purpose) {
         // 生成 6 位随机验证码
         String code = String.valueOf((int) (Math.random() * 900000) + 100000);
+
+        if (!smsEnabled || smsClient == null) {
+            // SMS 未启用或 Client 不可用，使用 Mock 模式
+            logger.info("SMS Mock mode: mobile={}, purpose={}, code={}", mobile, purpose, code);
+            String redisKey = buildRedisKey(mobile, purpose);
+            redisTemplate.opsForValue().set(redisKey, code, SMS_CODE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+            return;
+        }
 
         try {
             SendSmsRequest sendSmsRequest = new SendSmsRequest()
