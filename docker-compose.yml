@@ -1,0 +1,112 @@
+services:
+  # ========================================
+  # MySQL 8.4 数据库
+  # ========================================
+  mysql:
+    image: mysql:8.4
+    container_name: puyuan-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-puyuan_ai_mvp}
+      MYSQL_USER: ${MYSQL_USER:-test123}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-test123}
+      TZ: Asia/Shanghai
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - puyuan-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ========================================
+  # Redis 7 缓存
+  # ========================================
+  redis:
+    image: redis:7-alpine
+    container_name: puyuan-redis
+    restart: always
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - puyuan-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # Spring Boot 后端
+  # ========================================
+  backend:
+    build:
+      context: ./backend/java-spring
+      dockerfile: Dockerfile
+    container_name: puyuan-backend
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JAVA_OPTS=-Xms256m -Xmx512m
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-puyuan_ai_mvp}
+      - MYSQL_USER=${MYSQL_USER:-test123}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-test123}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./config/application-docker.yml:/app/config/application-docker.yml:ro
+    ports:
+      - "8080:8080"
+    networks:
+      - puyuan-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ========================================
+  # Nginx 反向代理 + 前端静态文件
+  # ========================================
+  nginx:
+    image: nginx:alpine
+    container_name: puyuan-nginx
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/merchant-web/dist:/usr/share/nginx/html/merchant:ro
+      - ./frontend/admin-web/dist:/usr/share/nginx/html/admin:ro
+    networks:
+      - puyuan-network
+
+networks:
+  puyuan-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local

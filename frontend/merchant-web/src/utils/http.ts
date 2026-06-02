@@ -23,7 +23,20 @@ export function buildMerchantHeaders(extra?: Record<string, string>): HeadersIni
   return headers;
 }
 
+function getApiBaseUrl(): string {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (baseUrl) {
+    return baseUrl;
+  }
+  // 开发环境使用相对路径（通过 vite proxy）
+  // 生产环境使用 VITE_API_BASE_URL 环境变量
+  return '';
+}
+
 export async function merchantRequest<T>(url: string, init?: RequestInit): Promise<T> {
+  const baseUrl = getApiBaseUrl();
+  const fullUrl = baseUrl ? `${baseUrl}${url}` : url;
+
   const merged: RequestInit = {
     ...init,
     headers: {
@@ -32,7 +45,7 @@ export async function merchantRequest<T>(url: string, init?: RequestInit): Promi
     },
   };
 
-  const response = await fetch(url, merged);
+  const response = await fetch(fullUrl, merged);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }

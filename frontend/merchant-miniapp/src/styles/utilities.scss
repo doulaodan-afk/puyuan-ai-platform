@@ -1,0 +1,379 @@
+/*
+  工具类
+  Linear 风格设计系统的实用工具类
+*/
+
+@import './design-tokens.scss';
+
+// ========================================
+// 渐变背景类
+// ========================================
+
+.gradient-surface {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.gradient-ink {
+  background: linear-gradient(135deg, #161616 0%, #1e1e1e 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+// 暗色模式
+.dark .gradient-surface {
+  background: linear-gradient(180deg, #0a0a0a 0%, #0f0f0f 100%);
+}
+
+.dark .gradient-ink {
+  background: linear-gradient(135deg, #171717 0%, #1f1f1f 100%);
+}
+
+// ========================================
+// 阴影类
+// ========================================
+
+.shadow-soft {
+  box-shadow: 0 4px 12px -2px rgba(36, 37, 47, 0.06),
+              0 2px 6px -2px rgba(36, 37, 47, 0.04);
+}
+
+.shadow-elevated {
+  box-shadow: 0 16px 40px -12px rgba(36, 37, 47, 0.12),
+              0 4px 12px -4px rgba(36, 37, 47, 0.06);
+}
+
+.dark .shadow-soft {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.5),
+              0 2px 6px -2px rgba(0, 0, 0, 0.4);
+}
+
+.dark .shadow-elevated {
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6),
+              0 4px 12px -4px rgba(0, 0, 0, 0.5);
+}
+
+// ========================================
+// 边框类
+// ========================================
+
+// Hairline border - 60% 透明度的细发丝边
+.hairline {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.dark .hairline {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.border-card {
+  border: 1px solid $border-light;
+}
+
+.dark .border-card {
+  border-color: $border-dark;
+}
+
+// ========================================
+// 卡片容器
+// ========================================
+
+.card {
+  background: $background-light;
+  border-radius: $radius-xl;
+  padding: $spacing-lg;
+  box-shadow: $shadow-sm-light;
+}
+
+.dark .card {
+  background: $background-dark;
+  box-shadow: $shadow-sm-dark;
+}
+
+.card-elevated {
+  background: $card-light;
+  border-radius: $radius-xl;
+  padding: $spacing-lg;
+  box-shadow: $shadow-md-light;
+  border: 1px solid $border-light;
+}
+
+.dark .card-elevated {
+  background: $card-dark;
+  box-shadow: $shadow-md-dark;
+  border-color: $border-dark;
+}
+
+// ========================================
+// 按钮样式
+// ========================================
+
+.btn-primary {
+  background: $primary-light;
+  color: $primary-foreground-light;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-xl;
+  font-size: $font-size-base;
+  font-weight: 500;
+  border: none;
+  transition: $transition-base;
+}
+
+.dark .btn-primary {
+  background: $primary-dark;
+  color: $primary-foreground-dark;
+}
+
+.btn-secondary {
+  background: $secondary-light;
+  color: $secondary-foreground-light;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-xl;
+  font-size: $font-size-base;
+  font-weight: 500;
+  border: 1px solid $border-light;
+  transition: $transition-base;
+}
+
+.dark .btn-secondary {
+  background: $secondary-dark;
+  color: $secondary-foreground-dark;
+  border-color: $border-dark;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: $foreground-light;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-xl;
+  font-size: $font-size-base;
+  border: 1px solid transparent;
+  transition: $transition-base;
+}
+
+.dark .btn-ghost {
+  color: $foreground-dark;
+}
+
+// ========================================
+// 输入框样式
+// ========================================
+
+.input {
+  background: $background-light;
+  color: $foreground-light;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-lg;
+  font-size: $font-size-base;
+  transition: $transition-base;
+}
+
+.dark .input {
+  background: $background-dark;
+  color: $foreground-dark;
+  border-color: $border-dark;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+// ========================================
+// 文本样式
+// ========================================
+
+.text-muted {
+  color: $muted-foreground-light;
+}
+
+.dark .text-muted {
+  color: $muted-foreground-dark;
+}
+
+.text-primary {
+  color: $primary-light;
+}
+
+.dark .text-primary {
+  color: $primary-dark;
+}
+
+.text-accent {
+  color: $accent-blue-light;
+}
+
+.dark .text-accent {
+  color: $accent-blue-dark;
+}
+
+// ========================================
+// 布局工具类
+// ========================================
+
+.page-container {
+  width: 100%;
+  padding: $spacing-md;
+}
+
+@media (min-width: 640px) {
+  .page-container {
+    padding: $spacing-lg;
+  }
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gap-sm { gap: $spacing-sm; }
+.gap-md { gap: $spacing-md; }
+.gap-lg { gap: $spacing-lg; }
+.gap-xl { gap: $spacing-xl; }
+
+// ========================================
+// 圆角工具类
+// ========================================
+
+.rounded-sm { border-radius: $radius-sm; }
+.rounded-md { border-radius: $radius-md; }
+.rounded-lg { border-radius: $radius-lg; }
+.rounded-xl { border-radius: $radius-xl; }
+.rounded-full { border-radius: $radius-full; }
+
+// ========================================
+// 间距工具类
+// ========================================
+
+.p-sm { padding: $spacing-sm; }
+.p-md { padding: $spacing-md; }
+.p-lg { padding: $spacing-lg; }
+.p-xl { padding: $spacing-xl; }
+
+.px-sm { padding-left: $spacing-sm; padding-right: $spacing-sm; }
+.px-md { padding-left: $spacing-md; padding-right: $spacing-md; }
+.px-lg { padding-left: $spacing-lg; padding-right: $spacing-lg; }
+
+.py-sm { padding-top: $spacing-sm; padding-bottom: $spacing-sm; }
+.py-md { padding-top: $spacing-md; padding-bottom: $spacing-md; }
+.py-lg { padding-top: $spacing-lg; padding-bottom: $spacing-lg; }
+
+.m-sm { margin: $spacing-sm; }
+.m-md { margin: $spacing-md; }
+.m-lg { margin: $spacing-lg; }
+
+.mt-sm { margin-top: $spacing-sm; }
+.mt-md { margin-top: $spacing-md; }
+.mt-lg { margin-top: $spacing-lg; }
+.mt-xl { margin-top: $spacing-xl; }
+
+.mb-sm { margin-bottom: $spacing-sm; }
+.mb-md { margin-bottom: $spacing-md; }
+.mb-lg { margin-bottom: $spacing-lg; }
+.mb-xl { margin-bottom: $spacing-xl; }
+
+// ========================================
+// 字体工具类
+// ========================================
+
+.text-xs { font-size: $font-size-xs; }
+.text-sm { font-size: $font-size-sm; }
+.text-base { font-size: $font-size-base; }
+.text-lg { font-size: $font-size-lg; }
+.text-xl { font-size: $font-size-xl; }
+.text-2xl { font-size: $font-size-2xl; }
+.text-3xl { font-size: $font-size-3xl; }
+
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+// ========================================
+// 状态标签
+// ========================================
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: 500;
+}
+
+.tag-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.tag-warning {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.tag-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.tag-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+// 暗色模式状态标签
+.dark .tag-success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.dark .tag-warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.dark .tag-danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.dark .tag-info {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+// ========================================
+// 空状态
+// ========================================
+
+.empty-state {
+  text-align: center;
+  padding: $spacing-3xl $spacing-lg;
+  color: $muted-foreground-light;
+}
+
+.dark .empty-state {
+  color: $muted-foreground-dark;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: $spacing-lg;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: $font-size-base;
+  line-height: 1.6;
+}

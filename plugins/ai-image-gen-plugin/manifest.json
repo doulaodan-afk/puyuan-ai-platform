@@ -1,0 +1,16 @@
+{
+  "plugin_id": "acme.ai-image-gen",
+  "name": "AI 商品图生成",
+  "version": "1.0.0",
+  "description": "基于文字描述生成濮院毛衫商品图片，支持多种尺寸和风格。插件以 iframe 形式嵌入平台，遵循平台 postMessage 通信协议。",
+  "icon_url": "",
+  "billing_type": "token",
+  "default_token_cost": 20,
+  "frontend_entry": "frontend/index.html",
+  "backend_api": "",
+  "need_config": false,
+  "visible_to": [],
+  "required_role": "merchant",
+  "config_fields": [],
+  "health_endpoint": "/health"
+}

@@ -1,0 +1,15 @@
+{
+  "plugin_id": "ai-image-gen",
+  "name": "AI 商品图生成",
+  "version": "1.0.0",
+  "description": "上传商品图片，AI 自动生成多场景、多风格的高质量商品图",
+  "icon_url": "",
+  "billing_type": "token",
+  "default_token_cost": 10,
+  "frontend_entry": "/plugins/ai-image-gen/index.html",
+  "backend_api": "/api/plugins/ai-image-gen",
+  "visible_to": ["merchant"],
+  "category": "ai_service",
+  "tags": ["商品图", "AI生成"],
+  "author": "acme"
+}

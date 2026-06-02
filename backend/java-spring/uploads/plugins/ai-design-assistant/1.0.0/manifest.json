@@ -1,0 +1,21 @@
+{
+  "plugin_id": "ai-design-assistant",
+  "name": "AI设计助手",
+  "version": "1.0.0",
+  "description": "基于AI的设计需求管理和任务协作平台",
+  "descriptionEn": "AI-powered design requirement management and task collaboration platform",
+  "icon_url": "",
+  "billing_type": "token",
+  "default_token_cost": 100,
+  "frontend_entry": "/plugins/ai-design-assistant/index.html",
+  "backend_api": "/api/plugins/ai-design-assistant",
+  "backend_docker_image": "",
+  "need_config": false,
+  "visible_to": ["merchant", "admin"],
+  "required_role": "",
+  "category": "ai_service",
+  "tags": ["AI", "设计", "任务管理"],
+  "author": "Puyuan Maoshan Platform",
+  "createdAt": "2026-05-20",
+  "updatedAt": "2026-05-22"
+}

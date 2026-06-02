@@ -1,0 +1,111 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.empty {
+  padding: 120px 0;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #999;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.empty-action {
+  display: inline-block;
+  padding: 10px 32px;
+  background: #667eea;
+  border-radius: 20px;
+}
+
+.action-text {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.order-list {
+  padding: 12px 16px;
+}
+
+.order-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.order-no {
+  font-size: 12px;
+  color: #999;
+}
+
+.order-status {
+  font-size: 13px;
+  font-weight: 500;
+
+  &.success {
+    color: #52c41a;
+  }
+
+  &.pending {
+    color: #faad14;
+  }
+
+  &.failed {
+    color: #ff4d4f;
+  }
+}
+
+.order-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.order-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #999;
+}
+
+.info-value {
+  font-size: 13px;
+  color: #333;
+
+  &.amount {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+  }
+}
+
+.load-more {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+}

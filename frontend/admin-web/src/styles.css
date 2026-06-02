@@ -1,14 +1,17 @@
-锘?root {
+:root {
   font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 
 body {
   margin: 0;
-  background: #f5f7fb;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 .layout {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
@@ -16,8 +19,11 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 20px;
-  background: #0f172a;
-  color: #fff;
+  background: hsl(var(--card));
+  border-bottom: 1px solid hsl(var(--border));
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .topbar nav {
@@ -26,24 +32,68 @@ body {
 }
 
 .topbar a {
-  color: #cbd5e1;
+  color: hsl(var(--muted-foreground));
   text-decoration: none;
+  padding: 6px 10px;
+  border-radius: calc(var(--radius) - 4px);
+  transition: all 0.2s ease;
 }
 
+.topbar a:hover,
 .topbar a.router-link-active {
-  color: #fff;
-  font-weight: 700;
+  color: hsl(var(--foreground));
+  background: hsl(var(--accent));
 }
 
 .topbar .logout {
-  border: 1px solid #475569;
-  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
   background: transparent;
-  color: #e2e8f0;
+  color: hsl(var(--foreground));
   padding: 6px 10px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.topbar .logout:hover {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+  border-color: hsl(var(--destructive));
 }
 
 .content {
   padding: 16px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .topbar nav {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: 12px 16px;
+  }
+
+  .content {
+    padding: 12px 16px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .content {
+    padding: 24px 32px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .content {
+    padding: 32px 40px;
+  }
 }

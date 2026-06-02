@@ -1,14 +1,35 @@
-﻿server:
+server:
   port: 8080
 
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/puyuan_ai_mvp?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: 123456
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB
   jackson:
     property-naming-strategy: SNAKE_CASE
+  # Temporarily disable Redis to allow startup
+  # data:
+  #   redis:
+  #     host: 127.0.0.1
+  #     port: 6379
+  #     database: 0
+  #     timeout: 3000
+
+# Temporarily disable rate limiter until Redis is available
+rate-limit:
+  enabled: false
 
 mybatis-plus:
   configuration:
@@ -21,9 +42,56 @@ mybatis-plus:
 
 logging:
   level:
-    com.puyuanmaoshan.platform: debug
-    org.springframework.web: info
-    com.baomidou.mybatisplus: info
+    com.puyuanmaoshan: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.boot: DEBUG
+    org.springframework.servlet: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+app:
+  base-url: http://localhost:8080
+  frontend-url: http://localhost:5173
+  security:
+    jwt-secret: ${JWT_SECRET:puyuanmaoshan-dev-jwt-secret-2026}
+    jwt-expire-hours: 168
+  ai:
+    mock-image-url: https://via.placeholder.com/300x200
+    mock-script-response: "这是一个示例脚本"
+    mock-translate-response: "Translated text"
+
+# 阿里云短信配置（开发环境禁用）
+aliyun:
+  sms:
+    enabled: false
+    access-key-id: your_access_key_id
+    access-key-secret: your_access_key_secret
+    endpoint: dysmsapi.aliyuncs.com
+    sign-name: 濮院毛衫
+    login-template-id: SMS_474785772
+    register-template-id: SMS_474980747
+
+# 微信小程序配置（本地开发使用真实凭证）
+wx:
+  miniapp:
+    appid: wxb24f10a1712e1bcc
+    secret: fc70a54f6f48c874302af7c9287a9482
+  payment:
+    mchid: 1227415902
+    # API v3 密钥需要从微信支付商户平台设置（商户平台 → 账户中心 → API安全）
+    # 请将下面替换为您设置的 API v3 密钥
+    api-v3-key: ${WX_PAYMENT_API_V3_KEY:SET_YOUR_API_V3_KEY_HERE}
+    notify-url: http://localhost:8080/api/v1/payment/wx/notify
+    # 商户私钥文件路径（开发环境使用 classpath 中的证书）
+    private-key-path: ${WX_PAYMENT_PRIVATE_KEY_PATH:wxpay-cert/apiclient_key.pem}
+    merchant-serial-number: 622E5925FEA68407D2BA785C6467E6F89E278B06
+    mock-enabled: true
+  subscribe:
+    mock-enabled: true
+    # 订阅消息模板 ID 需从微信公众平台获取后填入
+    balance-low-template-id: ${WX_SUBSCRIBE_BALANCE_LOW_TEMPLATE_ID:}
+    recharge-success-template-id: ${WX_SUBSCRIBE_RECHARGE_SUCCESS_TEMPLATE_ID:}
 
 springdoc:
   api-docs:

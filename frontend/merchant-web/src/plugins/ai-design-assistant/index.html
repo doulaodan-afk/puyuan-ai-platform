@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI设计助手</title>
+    <script>
+        // Redirect to main merchant-web app with plugin context
+        (function() {
+            var base = '/';
+            var pluginId = 'ai-design-assistant';
+            var hash = window.location.hash || '';
+            var path = hash.replace('#', '') || 'index';
+            window.location.href = base + '?plugin=' + pluginId + '#/' + path;
+        })();
+    </script>
+</head>
+<body>
+    <p>正在跳转到 AI 设计助手...</p>
+</body>
+</html>

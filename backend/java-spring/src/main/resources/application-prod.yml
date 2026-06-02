@@ -1,0 +1,94 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      force-request: true
+      force-response: true
+  tomcat:
+    max-file-size: 100MB
+    max-request-size: 100MB
+
+spring:
+  application:
+    name: platform-api
+  messages:
+    encoding: UTF-8
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      file-size-threshold: 2KB
+  encoding:
+    charset: UTF-8
+    force: true
+    force-request: true
+    force-response: true
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/puyuan_ai_mvp?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: change-me-in-prod
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+      timeout: 3000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.noop.NoLoggingImpl
+  global-config:
+    db-config:
+      id-type: auto
+      table-underline: true
+
+logging:
+  level:
+    root: WARN
+    com.puyuanmaoshan: INFO
+    org.springframework.web: WARN
+
+app:
+  base-url: https://ai.puyuanmaoshan.com
+  frontend-url: https://ai.puyuanmaoshan.com
+  security:
+    enable-auth-check: true
+  billing:
+    upstream-timeout-seconds: 30
+  ai:
+    mock-image-url: https://via.placeholder.com/300x200
+    mock-script-response: "这是一个示例脚本"
+    mock-translate-response: "Translated text"
+
+# 阿里云短信配置
+aliyun:
+  sms:
+    enabled: true
+    access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:}
+    endpoint: dysmsapi.aliyuncs.com
+    sign-name: 濮院毛衫
+    login-template-id: SMS_474785772
+    register-template-id: SMS_474980747
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+

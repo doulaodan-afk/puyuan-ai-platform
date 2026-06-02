@@ -1,5 +1,6 @@
 package com.puyuanmaoshan.platform.controller;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.puyuanmaoshan.platform.dto.ApiModels;
 import com.puyuanmaoshan.platform.dto.ApiResponse;
 import com.puyuanmaoshan.platform.entity.AuditLog;
@@ -75,6 +76,88 @@ public class PluginController {
 
         return ApiResponse.ok(data, RequestContextUtil.resolveRequestId(requestId, "req-plugin-list"));
     }
+
+    /**
+     * 获取租户可见的插件（商家端应用市场）
+     * 只返回 lifecycle_status = 'enabled' 的插件
+     * 如果当前租户在灰度名单中，也返回 lifecycle_status = 'gray' 的插件
+     */
+    @GetMapping("/visible")
+    public ApiResponse<List<VisiblePluginItem>> getVisiblePlugins(
+            @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
+        long parsedTenantId = RequestContextUtil.parseTenantId(tenantId);
+
+        // 查询当前租户已启用/停用的插件记录
+        Map<String, TenantPlugin> tenantPluginMap = tenantPluginService.lambdaQuery()
+                .eq(TenantPlugin::getTenantId, parsedTenantId)
+                .list()
+                .stream()
+                .collect(Collectors.toMap(TenantPlugin::getPluginId, Function.identity(), (a, b) -> a));
+
+        List<Plugin> enabledPlugins = pluginService.lambdaQuery()
+                .eq(Plugin::getStatus, 1)
+                .eq(Plugin::getLifecycleStatus, "enabled")
+                .orderByAsc(Plugin::getId)
+                .list();
+
+        List<Plugin> grayPlugins = pluginService.lambdaQuery()
+                .eq(Plugin::getStatus, 1)
+                .eq(Plugin::getLifecycleStatus, "gray")
+                .list();
+
+        final long tenantIdForFilter = parsedTenantId;
+        List<Plugin> visibleGrayPlugins = grayPlugins.stream()
+                .filter(p -> {
+                    String grayIds = p.getGrayTenantIds();
+                    if (grayIds == null || grayIds.isBlank()) return false;
+                    String[] ids = grayIds.split(",");
+                    for (String id : ids) {
+                        try {
+                            if (Long.parseLong(id.trim()) == tenantIdForFilter) return true;
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    return false;
+                })
+                .toList();
+
+        java.util.List<VisiblePluginItem> result = new java.util.ArrayList<>();
+        for (Plugin p : enabledPlugins) {
+            TenantPlugin tp = tenantPluginMap.get(p.getPluginId());
+            boolean tenantEnabled = tp != null && Objects.equals(tp.getEnabled(), 1);
+            result.add(new VisiblePluginItem(
+                    p.getPluginId(),
+                    p.getName(),
+                    p.getVersion(),
+                    p.getBillingType(),
+                    "enabled",
+                    tenantEnabled
+            ));
+        }
+        for (Plugin p : visibleGrayPlugins) {
+            TenantPlugin tp = tenantPluginMap.get(p.getPluginId());
+            boolean tenantEnabled = tp != null && Objects.equals(tp.getEnabled(), 1);
+            result.add(new VisiblePluginItem(
+                    p.getPluginId(),
+                    p.getName(),
+                    p.getVersion(),
+                    p.getBillingType(),
+                    "gray",
+                    tenantEnabled
+            ));
+        }
+
+        return ApiResponse.ok(result, RequestContextUtil.resolveRequestId(requestId, "req-plugin-visible"));
+    }
+
+    private record VisiblePluginItem(
+            @JsonProperty("plugin_id") String pluginId,
+            String name,
+            String version,
+            @JsonProperty("billing_type") String billingType,
+            @JsonProperty("lifecycle_status") String lifecycleStatus,
+            boolean enabled
+    ) {}
 
     @PostMapping("/{plugin_id}/enable")
     @Transactional(rollbackFor = Exception.class)

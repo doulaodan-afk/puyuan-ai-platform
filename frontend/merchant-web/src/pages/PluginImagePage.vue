@@ -1,5 +1,7 @@
 <template>
-  <section>
-    <h1>AI 图片生成</h1>
-  </section>
+  <AiImageGen />
 </template>
+
+<script setup lang="ts">
+import AiImageGen from "./AiImageGen.vue";
+</script>

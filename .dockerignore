@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+frontend/*/node_modules
+
+# Java build
+*.jar
+target
+backend/java-spring/target
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Docker
+Dockerfile
+.dockerignore
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docs & temp
+*.md
+docs
+test-cases
+*.docx
+~$*.docx
+temp_plugin
+*.py

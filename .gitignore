@@ -39,6 +39,9 @@ my.ini.bak
 # Data files (DO NOT commit)
 *.csv
 
+# Qwen skills (internal, not needed in repo)
+.qwen/
+
 # OS
 .DS_Store
 Thumbs.db

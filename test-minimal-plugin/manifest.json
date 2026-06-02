@@ -1,0 +1,9 @@
+{
+  "plugin_id": "test-minimal",
+  "name": "????",
+  "version": "1.0.0",
+  "description": "??",
+  "billing_type": "free",
+  "frontend_entry": "/plugins/test-minimal/index.html",
+  "backend_api": ""
+}

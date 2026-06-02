@@ -1,0 +1,14 @@
+{
+  "plugin_id": "ai-design-assistant",
+  "name": "AI设计助手",
+  "version": "1.0.0",
+  "description": "基于AI的设计需求管理和任务协作平台",
+  "icon_url": "",
+  "billing_type": "free",
+  "default_token_cost": 0,
+  "frontend_entry": "/plugins/ai-design-assistant/index.html",
+  "backend_api": "/api/plugins/ai-design-assistant",
+  "need_config": false,
+  "visible_to": [],
+  "required_role": "merchant"
+}

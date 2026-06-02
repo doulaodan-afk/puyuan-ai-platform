@@ -9,7 +9,9 @@ public enum ErrorCode {
     FORBIDDEN(40300, "forbidden", HttpStatus.FORBIDDEN),
     NOT_FOUND(40400, "resource not found", HttpStatus.NOT_FOUND),
     IDEMPOTENCY_CONFLICT(40901, "duplicate request", HttpStatus.CONFLICT),
+    CONFLICT(40902, "resource conflict", HttpStatus.CONFLICT),
     BUSINESS_ERROR(42200, "business error", HttpStatus.UNPROCESSABLE_ENTITY),
+    TOO_MANY_REQUESTS(42900, "too many requests", HttpStatus.TOO_MANY_REQUESTS),
     INTERNAL_ERROR(50000, "internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;

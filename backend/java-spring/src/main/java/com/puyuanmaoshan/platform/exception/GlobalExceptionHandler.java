@@ -49,9 +49,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleUnexpected(Exception ex, HttpServletRequest request) {
+        // Log full stack trace for debugging
+        request.setAttribute("javax.servlet.error.exception", ex);
+        System.err.println("[Unexpected Error] " + ex.getClass().getName() + ": " + ex.getMessage());
+        ex.printStackTrace();
         return ResponseEntity
                 .status(ErrorCode.INTERNAL_ERROR.httpStatus())
-                .body(ApiResponse.fail(ErrorCode.INTERNAL_ERROR, ErrorCode.INTERNAL_ERROR.defaultMessage(), requestId(request)));
+                .body(ApiResponse.fail(ErrorCode.INTERNAL_ERROR, ex.getMessage(), requestId(request)));
     }
 
     private String requestId(HttpServletRequest request) {

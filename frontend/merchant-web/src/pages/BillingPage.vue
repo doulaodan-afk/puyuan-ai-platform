@@ -107,6 +107,15 @@ onMounted(() => {
 label {
   display: grid;
   gap: 6px;
+  color: hsl(var(--foreground));
+}
+
+input {
+  padding: 6px 10px;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
 }
 
 .grid {
@@ -117,21 +126,26 @@ label {
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #d8e0f0;
-  border-radius: 8px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
   padding: 12px;
+}
+
+.card h2 {
+  margin-top: 0;
+  color: hsl(var(--foreground));
 }
 
 button {
   border: none;
-  border-radius: 6px;
+  border-radius: calc(var(--radius) - 4px);
   padding: 6px 10px;
-  background: #2e5fd7;
-  color: #fff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 .error {
-  color: #c83a28;
+  color: hsl(var(--destructive));
 }
 </style>

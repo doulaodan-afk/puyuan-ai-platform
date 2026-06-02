@@ -4,7 +4,11 @@ export type MerchantRole =
   | "merchant_owner"
   | "merchant_operator"
   | "merchant_editor"
-  | "merchant_viewer";
+  | "merchant_viewer"
+  | "boss"
+  | "tenant_admin"
+  | "tenant_operator"
+  | "tenant_viewer";
 
 export interface AppRouteMeta extends Record<string, unknown> {
   title: string;
@@ -58,7 +62,6 @@ export const merchantRoutes: RouteRecordRaw[] = [
     meta: {
       title: "AI 图片生成",
       requiresAuth: true,
-      roles: ["merchant_owner", "merchant_operator", "merchant_editor"],
     },
   },
   {
@@ -68,7 +71,15 @@ export const merchantRoutes: RouteRecordRaw[] = [
     meta: {
       title: "AI 脚本生成",
       requiresAuth: true,
-      roles: ["merchant_owner", "merchant_operator", "merchant_editor"],
+    },
+  },
+  {
+    path: "/plugins/ai-translate",
+    name: "MerchantPluginTranslate",
+    component: () => import("../pages/AiTranslate.vue"),
+    meta: {
+      title: "AI 跨境翻译",
+      requiresAuth: true,
     },
   },
   {
@@ -122,7 +133,27 @@ export const merchantRoutes: RouteRecordRaw[] = [
     meta: {
       title: "设置",
       requiresAuth: true,
-      roles: ["merchant_owner"],
+      roles: ["merchant_owner", "boss", "tenant_admin"],
+    },
+  },
+  {
+    path: "/profile",
+    name: "MerchantProfile",
+    component: () => import("../pages/ProfilePage.vue"),
+    meta: {
+      title: "个人中心",
+      requiresAuth: true,
+    },
+  },
+  {
+    path: "/members",
+    name: "MerchantMembers",
+    component: () => import("../pages/MembersPage.vue"),
+    meta: {
+      title: "成员管理",
+      requiresAuth: true,
+      roles: ["merchant_owner", "boss", "tenant_admin"],
     },
   },
 ];
+  

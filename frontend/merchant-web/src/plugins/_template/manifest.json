@@ -1,0 +1,15 @@
+{
+  "plugin_id": "{{PLUGIN_ID}}",
+  "name": "{{PLUGIN_NAME}}",
+  "version": "1.0.0",
+  "description": "",
+  "icon_url": "",
+  "billing_type": "token",
+  "default_token_cost": 10,
+  "frontend_entry": "/plugins/{{PLUGIN_ID}}/index.html",
+  "backend_api": "/api/plugins/{{PLUGIN_ID}}",
+  "visible_to": ["merchant"],
+  "category": "ai_service",
+  "tags": [],
+  "author": ""
+}

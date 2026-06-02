@@ -1,24 +1,26 @@
 <template>
-  <section class="login-panel">
-    <h1>商家登录</h1>
-    <p class="muted">测试账号：13800000001 / 123456</p>
+  <div class="login-page">
+    <section class="login-panel">
+      <h1>商家登录</h1>
+      <p class="muted">测试账号：13800000001 / 123456</p>
 
-    <form @submit.prevent="submitLogin" class="form-grid">
-      <label>
-        手机号
-        <input v-model.trim="mobile" type="text" placeholder="13800000001" />
-      </label>
+      <form @submit.prevent="submitLogin" class="form-grid">
+        <label>
+          手机号
+          <input v-model.trim="mobile" type="text" placeholder="13800000001" />
+        </label>
 
-      <label>
-        验证码
-        <input v-model.trim="verifyCode" type="text" placeholder="123456" />
-      </label>
+        <label>
+          验证码
+          <input v-model.trim="verifyCode" type="text" placeholder="123456" />
+        </label>
 
-      <button type="submit" :disabled="loading">{{ loading ? "登录中..." : "登录" }}</button>
-    </form>
+        <button type="submit" :disabled="loading">{{ loading ? "登录中..." : "登录" }}</button>
+      </form>
 
-    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-  </section>
+      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -93,13 +95,41 @@ async function submitLogin() {
 </script>
 
 <style scoped>
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  padding: 16px;
+}
+
+@media (min-width: 768px) {
+  .login-page {
+    padding: 24px;
+  }
+}
+
 .login-panel {
+  width: 100%;
   max-width: 420px;
-  margin: 40px auto;
-  background: #ffffff;
+  background: hsl(var(--card));
   border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(18, 30, 61, 0.08);
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid hsl(var(--border));
+}
+
+@media (min-width: 768px) {
+  .login-panel {
+    padding: 32px;
+  }
+}
+
+h1 {
+  color: hsl(var(--foreground));
+  margin-bottom: 8px;
 }
 
 .form-grid {
@@ -111,12 +141,20 @@ label {
   display: grid;
   gap: 6px;
   font-size: 14px;
+  color: hsl(var(--foreground));
 }
 
 input {
-  border: 1px solid #d7deea;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   padding: 8px 10px;
+  background: hsl(var(--input));
+  color: hsl(var(--foreground));
+  font-size: 14px;
+}
+
+input::placeholder {
+  color: hsl(var(--muted-foreground));
 }
 
 button {
@@ -124,9 +162,16 @@ button {
   border: none;
   border-radius: 6px;
   padding: 10px 12px;
-  background: #2058d6;
-  color: white;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  background: hsl(var(--primary) / 0.9);
 }
 
 button:disabled {
@@ -135,12 +180,14 @@ button:disabled {
 }
 
 .muted {
-  color: #5a677f;
+  color: hsl(var(--muted-foreground));
   font-size: 13px;
+  margin-bottom: 16px;
 }
 
 .error {
-  color: #c83a28;
+  color: hsl(var(--destructive));
   margin-top: 8px;
+  font-size: 13px;
 }
 </style>

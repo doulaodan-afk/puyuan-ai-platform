@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Design system — copied from main framework for standalone plugin development.
+  All colors MUST be HSL (Tailwind config consumes hsl(var(--token))).
+*/
+
+@layer base {
+  :root,
+  [data-theme='dark'] {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 8% 7%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 8% 7%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 10% 9%;
+
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 5% 12%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 240 5% 14%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 5% 16%;
+    --input: 240 5% 16%;
+    --ring: 0 0% 90%;
+
+    --radius: 0.625rem;
+
+    --chart-1: 0 0% 98%;
+    --chart-2: 217 91% 65%;
+    --chart-3: 142 71% 50%;
+    --chart-4: 38 92% 55%;
+    --chart-5: 271 81% 62%;
+
+    --accent-blue: 230 85% 65%;
+    --accent-blue-foreground: 240 10% 9%;
+
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.5),
+                 0 2px 6px -2px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 16px 40px -12px hsl(0 0% 0% / 0.6),
+                 0 4px 12px -4px hsl(0 0% 0% / 0.5);
+
+    --gradient-surface: linear-gradient(180deg,
+      hsl(240 10% 5%) 0%,
+      hsl(240 10% 4%) 100%);
+    --gradient-ink: linear-gradient(135deg,
+      hsl(240 8% 9%) 0%,
+      hsl(240 6% 14%) 100%);
+    --gradient-accent: linear-gradient(135deg,
+      hsl(230 85% 65%) 0%,
+      hsl(265 80% 67%) 100%);
+  }
+
+  [data-theme='light'] {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 9%;
+
+    --primary: 240 10% 9%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 9%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 60%;
+
+    --accent: 240 5% 94%;
+    --accent-foreground: 240 10% 9%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 240 10% 9%;
+
+    --chart-1: 240 10% 9%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 271 81% 56%;
+
+    --accent-blue: 230 85% 60%;
+    --accent-blue-foreground: 0 0% 100%;
+
+    --shadow-sm: 0 1px 2px 0 hsl(240 10% 9% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(240 10% 9% / 0.06),
+                 0 2px 6px -2px hsl(240 10% 9% / 0.04);
+    --shadow-lg: 0 16px 40px -12px hsl(240 10% 9% / 0.12),
+                 0 4px 12px -4px hsl(240 10% 9% / 0.06);
+
+    --gradient-surface: linear-gradient(180deg,
+      hsl(0 0% 100%) 0%,
+      hsl(240 10% 98%) 100%);
+    --gradient-ink: linear-gradient(135deg,
+      hsl(240 10% 9%) 0%,
+      hsl(240 8% 18%) 100%);
+    --gradient-accent: linear-gradient(135deg,
+      hsl(230 85% 60%) 0%,
+      hsl(265 80% 62%) 100%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11", "cv02";
+    font-family: "Inter", "PingFang SC", "Hiragino Sans GB",
+      "Microsoft YaHei", "Source Han Sans SC", "Noto Sans SC", system-ui,
+      -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring/40 ring-offset-2 ring-offset-background;
+  }
+
+  ::selection {
+    background: hsl(var(--foreground) / 0.12);
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-surface {
+    background: var(--gradient-surface);
+  }
+
+  .gradient-ink {
+    background: var(--gradient-ink);
+  }
+
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .hairline {
+    border-color: hsl(var(--border) / 0.6);
+  }
+
+  .glass {
+    @apply bg-background/70 backdrop-blur-xl backdrop-saturate-150;
+    border-color: hsl(var(--border) / 0.6);
+  }
+
+  .font-mono {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas,
+      "Liberation Mono", monospace;
+    font-feature-settings: "ss01";
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-200 ease-out will-change-transform hover:-translate-y-0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   Scrollbar — synced from main framework
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--card));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--secondary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+[data-theme='light'] ::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+}
+
+[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
