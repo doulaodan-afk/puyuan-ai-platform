@@ -1,7 +1,5 @@
 <template>
-  <AiScriptGen />
+  <section>
+    <h1>AI 脚本生成</h1>
+  </section>
 </template>
-
-<script setup lang="ts">
-import AiScriptGen from "./AiScriptGen.vue";
-</script>

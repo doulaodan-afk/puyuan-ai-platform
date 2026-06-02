@@ -4,11 +4,7 @@ export type MerchantRole =
   | "merchant_owner"
   | "merchant_operator"
   | "merchant_editor"
-  | "merchant_viewer"
-  | "boss"
-  | "tenant_admin"
-  | "tenant_operator"
-  | "tenant_viewer";
+  | "merchant_viewer";
 
 export interface AppRouteMeta extends Record<string, unknown> {
   title: string;
@@ -62,6 +58,7 @@ export const merchantRoutes: RouteRecordRaw[] = [
     meta: {
       title: "AI 图片生成",
       requiresAuth: true,
+      roles: ["merchant_owner", "merchant_operator", "merchant_editor"],
     },
   },
   {
@@ -71,15 +68,7 @@ export const merchantRoutes: RouteRecordRaw[] = [
     meta: {
       title: "AI 脚本生成",
       requiresAuth: true,
-    },
-  },
-  {
-    path: "/plugins/ai-translate",
-    name: "MerchantPluginTranslate",
-    component: () => import("../pages/AiTranslate.vue"),
-    meta: {
-      title: "AI 跨境翻译",
-      requiresAuth: true,
+      roles: ["merchant_owner", "merchant_operator", "merchant_editor"],
     },
   },
   {
@@ -133,59 +122,7 @@ export const merchantRoutes: RouteRecordRaw[] = [
     meta: {
       title: "设置",
       requiresAuth: true,
-      roles: ["merchant_owner", "boss", "tenant_admin"],
+      roles: ["merchant_owner"],
     },
-  },
-  {
-    path: "/profile",
-    name: "MerchantProfile",
-    component: () => import("../pages/ProfilePage.vue"),
-    meta: {
-      title: "个人中心",
-      requiresAuth: true,
-    },
-  },
-  {
-    path: "/members",
-    name: "MerchantMembers",
-    component: () => import("../pages/MembersPage.vue"),
-    meta: {
-      title: "成员管理",
-      requiresAuth: true,
-      roles: ["merchant_owner", "boss", "tenant_admin"],
-    },
-  },
-  {
-    path: "/design-assistant",
-    name: "DesignAssistant",
-    component: () => import("../views/design-assistant/PluginLayout.vue"),
-    meta: {
-      title: "AI 设计助手",
-      requiresAuth: true,
-    },
-    children: [
-      {
-        path: "",
-        redirect: "/design-assistant/list",
-      },
-      {
-        path: "list",
-        name: "DesignAssistantList",
-        component: () => import("../pages/DesignRequirementList.vue"),
-        meta: { title: "我的设计需求", requiresAuth: true },
-      },
-      {
-        path: "create",
-        name: "DesignAssistantCreate",
-        component: () => import("../pages/DesignRequirementCreate.vue"),
-        meta: { title: "创建设计需求", requiresAuth: true },
-      },
-      {
-        path: "settings",
-        name: "DesignAssistantSettings",
-        component: () => import("../views/design-assistant/TeamSettingsPage.vue"),
-        meta: { title: "成员管理", requiresAuth: true, roles: ["boss"] },
-      },
-    ],
   },
 ];

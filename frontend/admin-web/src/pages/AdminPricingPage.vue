@@ -91,86 +91,42 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-}
-
-h1 {
-  color: hsl(var(--foreground));
-  font-size: 24px;
-  font-weight: 600;
 }
 
 .panel {
-  margin-top: 16px;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  padding: 16px;
-  max-width: 600px;
+  margin-top: 12px;
+  background: #fff;
+  border: 1px solid #d8e0f0;
+  border-radius: 8px;
+  padding: 12px;
 }
 
 .form-grid {
   display: grid;
-  gap: 16px;
+  gap: 10px;
+  max-width: 520px;
 }
 
 label {
   display: grid;
-  gap: 8px;
-  font-size: 14px;
-  color: hsl(var(--foreground));
-  font-weight: 500;
+  gap: 6px;
 }
 
 input {
-  padding: 10px 12px;
-  border: 1px solid hsl(var(--input));
-  border-radius: calc(var(--radius) - 4px);
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-input:hover {
-  border-color: hsl(var(--ring));
-}
-
-input:focus {
-  outline: none;
-  border-color: hsl(var(--ring));
-  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
+  border: 1px solid #d7deea;
+  border-radius: 6px;
+  padding: 8px 10px;
 }
 
 button {
-  margin-top: 8px;
   border: none;
-  border-radius: calc(var(--radius) - 4px);
-  padding: 10px 16px;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-button:hover:not(:disabled) {
-  background: hsl(240 8% 18%);
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #2e5fd7;
+  color: #fff;
 }
 
 .error {
-  color: hsl(var(--destructive));
-  background: hsl(var(--destructive) / 0.1);
-  padding: 12px;
-  border-radius: calc(var(--radius) - 4px);
-  font-size: 14px;
-  margin-bottom: 16px;
-  border: 1px solid hsl(var(--destructive) / 0.3);
+  color: #c83a28;
 }
 </style>

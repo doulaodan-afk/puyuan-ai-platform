@@ -61,9 +61,9 @@ onMounted(() => {
 
 .card {
   margin-top: 12px;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 2px);
+  background: #fff;
+  border: 1px solid #d8e0f0;
+  border-radius: 8px;
   padding: 14px;
   line-height: 1.8;
 }
@@ -74,28 +74,15 @@ onMounted(() => {
   gap: 12px;
 }
 
-.actions a {
-  color: hsl(var(--primary));
-  text-decoration: none;
-  padding: 6px 10px;
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 4px);
-  transition: all 0.2s ease;
-}
-
-.actions a:hover {
-  background: hsl(var(--accent));
-}
-
 button {
   border: none;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: 6px;
   padding: 6px 10px;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: #2e5fd7;
+  color: #fff;
 }
 
 .error {
-  color: hsl(var(--destructive));
+  color: #c83a28;
 }
 </style>

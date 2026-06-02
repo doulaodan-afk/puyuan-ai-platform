@@ -24,6 +24,21 @@ logs/
 .env.local
 .env.*.local
 
+# WeChat Payment Certificates (DO NOT commit)
+wxpay-cert/
+**/wxpay-cert/apiclient_key.pem
+**/wxpay-cert/apiclient_cert.pem
+**/wxpay-cert/apiclient_cert.p12
+微信支付证书文件/
+
+# Server keys and configs (DO NOT commit)
+*.pem
+my.ini
+my.ini.bak
+
+# Data files (DO NOT commit)
+*.csv
+
 # OS
 .DS_Store
 Thumbs.db

@@ -6,13 +6,13 @@
     <form @submit.prevent="submitLogin" class="form-grid">
       <label>
         手机号
-        <input v-model.trim="mobile" type="text" placeholder="13900000001" class="input" />
+        <input v-model.trim="mobile" type="text" placeholder="13900000001" />
       </label>
       <label>
         验证码
-        <input v-model.trim="verifyCode" type="text" placeholder="123456" class="input" />
+        <input v-model.trim="verifyCode" type="text" placeholder="123456" />
       </label>
-      <button type="submit" :disabled="loading" class="btn-primary">{{ loading ? "登录中..." : "登录" }}</button>
+      <button type="submit" :disabled="loading">{{ loading ? "登录中..." : "登录" }}</button>
     </form>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
@@ -59,93 +59,44 @@ async function submitLogin() {
 <style scoped>
 .login-panel {
   max-width: 420px;
-  margin: 80px auto;
-  background: hsl(var(--card));
-  border-radius: var(--radius);
-  padding: 32px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid hsl(var(--border));
-}
-
-h1 {
-  color: hsl(var(--card-foreground));
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-}
-
-.muted {
-  color: hsl(var(--muted-foreground));
-  font-size: 13px;
-  margin: 0;
+  margin: 40px auto;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(18, 30, 61, 0.08);
 }
 
 .form-grid {
   display: grid;
-  gap: 16px;
-  margin-top: 24px;
+  gap: 12px;
 }
 
 label {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   font-size: 14px;
-  color: hsl(var(--card-foreground));
-  font-weight: 500;
 }
 
-.input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 4px);
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-size: 14px;
-  transition: border-color 0.2s ease;
-  box-sizing: border-box;
+input {
+  border: 1px solid #d7deea;
+  border-radius: 6px;
+  padding: 8px 10px;
 }
 
-.input:hover {
-  border-color: hsl(var(--muted-foreground));
-}
-
-.input:focus {
-  outline: none;
-  border-color: hsl(var(--primary));
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
-}
-
-.btn-primary {
-  margin-top: 8px;
-  padding: 12px 16px;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+button {
+  margin-top: 6px;
   border: none;
-  border-radius: calc(var(--radius) - 4px);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #2058d6;
+  color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.muted {
+  color: #5a677f;
 }
 
 .error {
-  color: hsl(var(--destructive));
-  background: hsl(var(--destructive) / 0.1);
-  padding: 12px;
-  border-radius: calc(var(--radius) - 4px);
-  font-size: 14px;
-  text-align: center;
-  margin-top: 16px;
-  border: 1px solid hsl(var(--destructive) / 0.3);
+  color: #c83a28;
 }
 </style>

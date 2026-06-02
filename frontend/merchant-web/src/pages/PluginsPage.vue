@@ -1,7 +1,7 @@
 <template>
   <section>
     <header class="row-head">
-      <h1>应用市场</h1>
+      <h1>插件列表</h1>
       <button @click="loadPlugins" :disabled="loading">{{ loading ? "加载中..." : "刷新" }}</button>
     </header>
 
@@ -9,27 +9,24 @@
 
     <ul class="plugin-grid">
       <li v-for="item in plugins" :key="item.plugin_id" class="plugin-card">
-        <div class="plugin-info" @click="openPlugin(item)">
-          <div class="plugin-header">
-            <strong class="plugin-name">{{ item.name }}</strong>
-            <span :class="'status-' + item.lifecycle_status">{{ statusText(item.lifecycle_status) }}</span>
-          </div>
-          <p class="sub">{{ item.plugin_id }} | v{{ item.version }}</p>
-          <p class="billing-hint">{{ billingHint(item.billing_type) }}</p>
+        <div>
+          <strong>{{ item.name }}</strong>
+          <p class="sub">{{ item.plugin_id }} | {{ item.version }} | {{ item.billing_type }}</p>
         </div>
-        <div class="actions" @click.stop>
-          <button @click="openPlugin(item)">{{ item.lifecycle_status === 'gray' ? '灰度体验' : '立即使用' }}</button>
+        <div class="actions">
+          <span :class="item.enabled ? 'tag-on' : 'tag-off'">{{ item.enabled ? "已启用" : "已禁用" }}</span>
+          <button v-if="!item.enabled" @click="togglePlugin(item.plugin_id, true)">启用</button>
+          <button v-else @click="togglePlugin(item.plugin_id, false)">禁用</button>
         </div>
       </li>
     </ul>
 
-    <p v-if="!loading && plugins.length === 0" class="empty">暂无可用插件</p>
+    <p v-if="!loading && plugins.length === 0" class="empty">暂无插件记录</p>
   </section>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 
 interface PluginItem {
@@ -37,7 +34,7 @@ interface PluginItem {
   name: string;
   version: string;
   billing_type: string;
-  lifecycle_status: "enabled" | "gray";
+  enabled: boolean;
 }
 
 interface PluginListResponse {
@@ -46,24 +43,10 @@ interface PluginListResponse {
   data: PluginItem[];
 }
 
-const router = useRouter();
 const auth = useAuthStore();
 const plugins = ref<PluginItem[]>([]);
 const loading = ref(false);
 const errorMessage = ref("");
-
-// 插件ID到路由的映射
-const PLUGIN_ROUTES: Record<string, string> = {
-  "ai_script_gen": "/plugins/ai-script",
-  "ai_translate": "/plugins/ai-translate",
-  "ai_design_assistant": "/design-assistant",
-  "ai_image_gen": "/plugins/ai-image",
-};
-
-function openPlugin(item: PluginItem) {
-  const routePath = PLUGIN_ROUTES[item.plugin_id] || `/plugins/${item.plugin_id}`;
-  router.push(routePath);
-}
 
 function buildHeaders(extra?: Record<string, string>): HeadersInit {
   return {
@@ -78,7 +61,7 @@ async function loadPlugins() {
   loading.value = true;
   errorMessage.value = "";
   try {
-    const response = await fetch("/api/v1/plugins/visible", {
+    const response = await fetch("/api/v1/plugins", {
       method: "GET",
       headers: buildHeaders(),
     });
@@ -98,21 +81,20 @@ async function loadPlugins() {
   }
 }
 
-function statusText(status: string): string {
-  const map: Record<string, string> = {
-    enabled: "已上架",
-    gray: "灰度测试中",
-  };
-  return map[status] || status;
-}
-
-function billingHint(billingType: string): string {
-  const map: Record<string, string> = {
-    "token": "按 Token 计费",
-    "subscription": "订阅制",
-    "one_time": "一次性付费",
-  };
-  return map[billingType] || billingType;
+async function togglePlugin(pluginId: string, enable: boolean) {
+  errorMessage.value = "";
+  try {
+    const response = await fetch(`/api/v1/plugins/${pluginId}/${enable ? "enable" : "disable"}`, {
+      method: "POST",
+      headers: buildHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    await loadPlugins();
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : "toggle plugin failed";
+  }
 }
 
 onMounted(() => {
@@ -128,114 +110,75 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
-h1 {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0;
-}
-
 .plugin-grid {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .plugin-card {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 2px);
-  padding: 16px;
+  background: #fff;
+  border: 1px solid #d8e0f0;
+  border-radius: 8px;
+  padding: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.plugin-card:hover {
-  border-color: hsl(var(--accent-blue));
-  box-shadow: var(--shadow-md);
-}
-
-.plugin-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.plugin-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-
-.plugin-name {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.status-enabled {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  background: hsl(142 71% 45% / 0.15);
-  color: hsl(142 71% 45%);
-}
-
-.status-gray {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  background: hsl(260 60% 60% / 0.15);
-  color: hsl(260 60% 60%);
+  gap: 12px;
 }
 
 .sub {
-  color: hsl(var(--muted-foreground));
+  color: #5c6a82;
   margin: 4px 0 0;
   font-size: 12px;
 }
 
-.billing-hint {
-  color: hsl(var(--muted-foreground));
-  margin: 2px 0 0;
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-on,
+.tag-off {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
   font-size: 12px;
 }
 
-.actions {
-  flex-shrink: 0;
+.tag-on {
+  background: #e6f7ef;
+  color: #1a7f48;
 }
 
-.actions button {
+.tag-off {
+  background: #ffecec;
+  color: #a83838;
+}
+
+button {
   border: none;
-  border-radius: calc(var(--radius) - 4px);
-  padding: 8px 16px;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: #2e5fd7;
+  color: #fff;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
 }
 
-.actions button:hover {
-  opacity: 0.9;
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .error {
-  color: hsl(var(--destructive));
-  margin-bottom: 12px;
+  color: #c83a28;
 }
 
 .empty {
-  color: hsl(var(--muted-foreground));
-  text-align: center;
-  padding: 48px 24px;
+  color: #5c6a82;
 }
 </style>

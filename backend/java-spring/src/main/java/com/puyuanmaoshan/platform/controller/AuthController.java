@@ -10,8 +10,6 @@ import com.puyuanmaoshan.platform.service.TenantService;
 import com.puyuanmaoshan.platform.service.UserAccountService;
 import com.puyuanmaoshan.platform.util.RequestContextUtil;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,8 +22,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1")
 public class AuthController {
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
     private final UserAccountService userAccountService;
     private final TenantService tenantService;
 
@@ -41,9 +37,6 @@ public class AuthController {
         if (user == null) {
             throw new AppException(ErrorCode.NOT_FOUND, "user not found");
         }
-
-        logger.debug("Login user: id={}, mobile={}, roleCode={}", user.getId(), user.getMobile(), user.getRoleCode());
-
         Tenant tenant = tenantService.getById(user.getTenantId());
         if (tenant == null) {
             throw new AppException(ErrorCode.NOT_FOUND, "tenant not found");

@@ -30,24 +30,6 @@ public class UserAccount {
     @TableField("nickname")
     private String nickname;
 
-    @TableField("avatar_url")
-    private String avatarUrl;
-
-    @TableField("phone")
-    private String phone;
-
-    @TableField("wechat_openid")
-    private String wechatOpenid;
-
-    @TableField("wechat_unionid")
-    private String wechatUnionid;
-
-    @TableField("email")
-    private String email;
-
-    @TableField("password")
-    private String password;
-
     @TableField("role_code")
     private String roleCode;
 
