@@ -62,16 +62,18 @@ public class SmsService {
      * 发送短信验证码
      */
     private void sendSmsCode(String mobile, String templateId, String purpose) {
-        // 生成 6 位随机验证码
-        String code = String.valueOf((int) (Math.random() * 900000) + 100000);
-
+        String code;
         if (!smsEnabled || smsClient == null) {
-            // SMS 未启用或 Client 不可用，使用 Mock 模式
+            // SMS 未启用或 Client 不可用，使用 Mock 模式（固定验证码便于测试）
+            code = "123456";
             logger.info("SMS Mock mode: mobile={}, purpose={}, code={}", mobile, purpose, code);
             String redisKey = buildRedisKey(mobile, purpose);
             redisTemplate.opsForValue().set(redisKey, code, SMS_CODE_EXPIRE_MINUTES, TimeUnit.MINUTES);
             return;
         }
+
+        // 生成 6 位随机验证码
+        code = String.valueOf((int) (Math.random() * 900000) + 100000);
 
         try {
             SendSmsRequest sendSmsRequest = new SendSmsRequest()
