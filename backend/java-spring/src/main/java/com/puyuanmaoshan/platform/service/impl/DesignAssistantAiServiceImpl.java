@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true")
 public class DesignAssistantAiServiceImpl implements DesignAssistantAiService {
     private static final Logger logger = LoggerFactory.getLogger(DesignAssistantAiServiceImpl.class);
 

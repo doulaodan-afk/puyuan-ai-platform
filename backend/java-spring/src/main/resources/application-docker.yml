@@ -13,6 +13,7 @@ spring:
     redis:
       host: ${REDIS_HOST:redis}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
       database: 0
       timeout: 3000
 
@@ -22,7 +23,6 @@ rate-limit:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       id-type: auto
@@ -32,14 +32,59 @@ logging:
   level:
     com.puyuanmaoshan: INFO
     org.springframework.web: INFO
-    org.springframework.boot: INFO
 
+# ========================================
+# 阿里云短信（真实模式）
+# ========================================
+aliyun:
+  sms:
+    enabled: ${ALIYUN_SMS_ENABLED:false}
+    access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:}
+    endpoint: dysmsapi.aliyuncs.com
+    sign-name: 濮院毛衫
+    login-template-id: SMS_474785772
+    register-template-id: SMS_474980747
+
+# ========================================
+# AI 服务配置
+# ========================================
 app:
-  base-url: http://localhost:8080
+  base-url: https://ai.puyuanmaoshan.com
   ai:
-    mock-image-url: https://via.placeholder.com/300x200
-    mock-script-response: "这是一个示例脚本"
-    mock-translate-response: "Translated text"
+    mock-enabled: ${AI_MOCK_ENABLED:false}
+    base-url: ${AI_BASE_URL:https://api.openai.com/v1}
+    provider: ${AI_PROVIDER:openai}
+    api-key: ${OPENAI_API_KEY:}
+    models:
+      default: deepseek-v3
+      image: qwen-vl-max-2025-01-2
+      script: z-ai/glm-4.7
+      translate: qwen3-max-preview
+  storage:
+    mock-enabled: ${APP_STORAGE_MOCK_ENABLED:false}
+    provider: qiniu
+    qiniu:
+      access-key: ${QINIU_ACCESS_KEY:}
+      secret-key: ${QINIU_SECRET_KEY:}
+      bucket: ${QINIU_BUCKET:puyuanmaoshan}
+      cdn-domain: ${QINIU_CDN_DOMAIN:www-cdn.puyuanmaoshan.com}
+
+# ========================================
+# 微信支付（真实模式）
+# ========================================
+wx:
+  payment:
+    mock-enabled: ${WX_PAYMENT_MOCK_ENABLED:false}
+    mchid: ${WX_PAYMENT_MCHID:}
+    api-v3-key: ${WX_PAYMENT_API_V3_KEY:}
+    notify-url: ${WX_PAYMENT_NOTIFY_URL:}
+    private-key-path: ${WX_PAYMENT_PRIVATE_KEY_PATH:/app/config/apiclient_key.pem}
+    merchant-serial-number: ${WX_PAYMENT_MERCHANT_SERIAL_NUMBER:}
+  subscribe:
+    mock-enabled: ${WX_SUBSCRIBE_MOCK_ENABLED:false}
+    balance-low-template-id: ${WX_SUBSCRIBE_BALANCE_LOW_TEMPLATE_ID:}
+    recharge-success-template-id: ${WX_SUBSCRIBE_RECHARGE_SUCCESS_TEMPLATE_ID:}
 
 springdoc:
   api-docs:

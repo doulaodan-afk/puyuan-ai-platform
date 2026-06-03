@@ -110,17 +110,6 @@ public class SmsService {
      * 验证短信验证码
      */
     public boolean verifySmsCode(String mobile, String code, String purpose) {
-        if (!smsEnabled || smsClient == null) {
-            // Mock mode: accept fixed code "123456" without Redis lookup
-            boolean valid = "123456".equals(code);
-            if (valid) {
-                logger.info("SMS Mock verify passed - mobile: {}, purpose: {}", mobile, purpose);
-            } else {
-                logger.warn("SMS Mock verify failed - mobile: {}, purpose: {}, code: {}", mobile, purpose, code);
-            }
-            return valid;
-        }
-
         String redisKey = buildRedisKey(mobile, purpose);
         String storedCode = redisTemplate.opsForValue().get(redisKey);
 

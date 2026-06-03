@@ -19,14 +19,14 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true")
 public class AiScriptServiceImplV2 implements AiScriptService {
 
     private final SystemConfigService systemConfigService;
     private final AccountWalletService accountWalletService;
     private final SubscribeMessageService subscribeMessageService;
 
-    @Value("${app.ai.mock-script-response}")
+    @Value("${app.ai.mock-script-response:这是一个示例脚本}")
     private String mockScriptResponse;
 
     @Value("${account.balance.low-threshold:100}")

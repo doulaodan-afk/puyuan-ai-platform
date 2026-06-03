@@ -19,14 +19,14 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true")
 public class AiImageServiceImplV2 implements AiImageService {
 
     private final SystemConfigService systemConfigService;
     private final AccountWalletService accountWalletService;
     private final SubscribeMessageService subscribeMessageService;
 
-    @Value("${app.ai.mock-image-url}")
+    @Value("${app.ai.mock-image-url:https://via.placeholder.com/300x200}")
     private String mockImageUrl;
 
     @Value("${account.balance.low-threshold:100}")

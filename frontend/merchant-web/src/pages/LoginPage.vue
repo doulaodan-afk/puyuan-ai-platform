@@ -2,20 +2,24 @@
   <div class="login-page">
     <section class="login-panel">
       <h1>商家登录</h1>
-      <p class="muted">测试账号：13800000001 / 123456</p>
 
       <form @submit.prevent="submitLogin" class="form-grid">
         <label>
           手机号
-          <input v-model.trim="mobile" type="text" placeholder="13800000001" />
+          <input v-model.trim="mobile" type="text" placeholder="请输入手机号" />
         </label>
 
         <label>
           验证码
-          <input v-model.trim="verifyCode" type="text" placeholder="123456" />
+          <div class="verify-code-row">
+            <input v-model.trim="verifyCode" type="text" placeholder="请输入验证码" />
+            <button type="button" :disabled="smsCooldown > 0 || !mobileValid" class="sms-btn" @click="sendSmsCode">
+              {{ smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码" }}
+            </button>
+          </div>
         </label>
 
-        <button type="submit" :disabled="loading">{{ loading ? "登录中..." : "登录" }}</button>
+        <button type="submit" :disabled="loading" class="login-btn">{{ loading ? "登录中..." : "登录" }}</button>
       </form>
 
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
@@ -24,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 
@@ -39,10 +43,13 @@ interface LoginApiResponse {
   data: LoginData;
 }
 
-const mobile = ref("13800000001");
-const verifyCode = ref("123456");
+const mobile = ref("");
+const verifyCode = ref("");
 const loading = ref(false);
 const errorMessage = ref("");
+const smsCooldown = ref(0);
+
+const mobileValid = computed(() => /^1[3-9]\d{9}$/.test(mobile.value));
 
 const router = useRouter();
 const route = useRoute();
@@ -54,6 +61,28 @@ function resolveRedirect(): string {
     return redirect;
   }
   return "/dashboard";
+}
+
+async function sendSmsCode() {
+  if (!mobileValid.value || smsCooldown.value > 0) return;
+  errorMessage.value = "";
+  try {
+    const response = await fetch(`/api/v1/sms/send-login-code?mobile=${encodeURIComponent(mobile.value)}`, {
+      method: "POST",
+      headers: { "X-Request-Id": crypto.randomUUID() },
+    });
+    const payload = await response.json();
+    if (payload.code !== 0) {
+      throw new Error(payload.message || "发送验证码失败");
+    }
+    smsCooldown.value = 60;
+    const timer = setInterval(() => {
+      smsCooldown.value--;
+      if (smsCooldown.value <= 0) clearInterval(timer);
+    }, 1000);
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : "发送验证码失败";
+  }
 }
 
 async function submitLogin() {
@@ -157,7 +186,38 @@ input::placeholder {
   color: hsl(var(--muted-foreground));
 }
 
-button {
+.verify-code-row {
+  display: flex;
+  gap: 8px;
+}
+
+.verify-code-row input {
+  flex: 1;
+}
+
+.sms-btn {
+  white-space: nowrap;
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.sms-btn:hover:not(:disabled) {
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary));
+}
+
+.sms-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-btn {
   margin-top: 6px;
   border: none;
   border-radius: 6px;
@@ -170,19 +230,13 @@ button {
   transition: all 0.2s ease;
 }
 
-button:hover:not(:disabled) {
+.login-btn:hover:not(:disabled) {
   background: hsl(var(--primary) / 0.9);
 }
 
-button:disabled {
+.login-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.muted {
-  color: hsl(var(--muted-foreground));
-  font-size: 13px;
-  margin-bottom: 16px;
 }
 
 .error {

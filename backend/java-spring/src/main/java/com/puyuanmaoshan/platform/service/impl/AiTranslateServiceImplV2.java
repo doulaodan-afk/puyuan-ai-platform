@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true")
 public class AiTranslateServiceImplV2 implements AiTranslateService {
 
     private final SystemConfigService systemConfigService;

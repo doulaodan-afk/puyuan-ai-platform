@@ -4,6 +4,7 @@ import com.puyuanmaoshan.platform.service.OssService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
 @Service
+@ConditionalOnProperty(name = "app.storage.mock.enabled", havingValue = "true", matchIfMissing = true)
 public class OssServiceImpl implements OssService {
 
     private static final Logger logger = LoggerFactory.getLogger(OssServiceImpl.class);

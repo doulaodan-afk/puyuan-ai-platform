@@ -19,7 +19,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.storage.mock.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.storage.mock.enabled", havingValue = "true")
 public class StorageServiceImpl implements StorageService {
 
     private final SystemConfigService systemConfigService;

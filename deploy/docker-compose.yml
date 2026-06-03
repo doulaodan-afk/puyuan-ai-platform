@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # MySQL 数据库
   mysql:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: puyuan-mysql
     restart: always
     environment:
@@ -13,7 +13,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Shanghai
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init-db:/docker-entrypoint-initdb.d
@@ -76,7 +76,22 @@ services:
       WX_SUBSCRIBE_BALANCE_LOW_TEMPLATE_ID: ${WX_SUBSCRIBE_BALANCE_LOW_TEMPLATE_ID}
       WX_SUBSCRIBE_RECHARGE_SUCCESS_TEMPLATE_ID: ${WX_SUBSCRIBE_RECHARGE_SUCCESS_TEMPLATE_ID}
       AI_MOCK_ENABLED: ${AI_MOCK_ENABLED}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      APP_AI_MOCK_ENABLED: ${APP_AI_MOCK_ENABLED:-false}
+      OPENAI_API_KEY: ${AI_API_KEY}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      # 阿里云短信
+      ALIYUN_SMS_ENABLED: ${ALIYUN_SMS_ENABLED:-false}
+      ALIYUN_SMS_ACCESS_KEY_ID: ${ALIYUN_SMS_ACCESS_KEY_ID:-}
+      ALIYUN_SMS_ACCESS_KEY_SECRET: ${ALIYUN_SMS_ACCESS_KEY_SECRET:-}
+      # 七牛云存储
+      QINIU_ACCESS_KEY: ${QINIU_ACCESS_KEY:-}
+      QINIU_SECRET_KEY: ${QINIU_SECRET_KEY:-}
+      QINIU_BUCKET: ${QINIU_BUCKET:-}
+      QINIU_CDN_DOMAIN: ${QINIU_CDN_DOMAIN:-}
+      APP_STORAGE_MOCK_ENABLED: ${APP_STORAGE_MOCK_ENABLED:-false}
+    volumes:
+      - ./config:/app/config:ro
     ports:
       - "8080:8080"
     networks:
