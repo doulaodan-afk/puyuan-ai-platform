@@ -285,12 +285,24 @@ public class SystemConfigServiceImplWithRedis extends ServiceImpl<SystemConfigMa
         String oldValue = null;
 
         if (request.getId() != null) {
-            // 更新现有配置
+            // 按 ID 更新现有配置
             config = getById(request.getId());
             if (config == null) {
                 throw new IllegalArgumentException("配置不存在: " + request.getId());
             }
             oldValue = cryptoUtil.decrypt(config.getConfigValue());
+        } else {
+            // 按 (group, key) 查找已有配置，有则更新，无则新增
+            LambdaQueryWrapper<SystemConfig> wrapper = new LambdaQueryWrapper<SystemConfig>()
+                    .eq(SystemConfig::getConfigGroup, request.getConfigGroup())
+                    .eq(SystemConfig::getConfigKey, request.getConfigKey());
+            config = getOne(wrapper);
+            if (config != null) {
+                oldValue = cryptoUtil.decrypt(config.getConfigValue());
+            }
+        }
+
+        if (config != null) {
             config.setConfigGroup(request.getConfigGroup());
             config.setConfigKey(request.getConfigKey());
             config.setConfigValue(cryptoUtil.encrypt(request.getConfigValue()));
@@ -299,7 +311,6 @@ public class SystemConfigServiceImplWithRedis extends ServiceImpl<SystemConfigMa
             config.setDescription(request.getDescription());
             config.setUpdatedAt(LocalDateTime.now());
         } else {
-            // 新增配置
             config = SystemConfig.builder()
                     .configGroup(request.getConfigGroup())
                     .configKey(request.getConfigKey())
