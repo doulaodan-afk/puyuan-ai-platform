@@ -14,22 +14,22 @@ export function useMenuFilter() {
 
   // 定义所有菜单项
   const allMenus: MenuItem[] = [
-    // AI 工具
+    // AI 工具（租户端）
     {
-      path: '/ai-tools/image-gen',
+      path: '/plugins/ai-image',
       name: 'AI 图片生成',
       icon: '🖼️',
       roles: ['boss', 'designer', 'design_assistant', 'operator'],
     },
     {
-      path: '/ai-tools/script-gen',
-      name: 'AI 脚本生成',
+      path: '/plugins/ai-script',
+      name: 'AI 文本生成',
       icon: '📝',
       roles: ['boss', 'designer', 'design_assistant', 'operator'],
     },
     {
-      path: '/ai-tools/translate',
-      name: 'AI 跨境翻译',
+      path: '/plugins/ai-translate',
+      name: 'AI 翻译',
       icon: '🌐',
       roles: ['boss', 'designer', 'design_assistant', 'operator'],
     },

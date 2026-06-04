@@ -52,5 +52,12 @@ Thumbs.db
 *.swp
 *~
 
+# Sensitive config (DO NOT commit)
+env.txt
+start_test_error.txt
+start_test_output.txt
+tmp_seed_data.sql
+tmp_tenant_user.sql
+
 # Claude
 .claude/

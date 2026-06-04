@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "app.ai.mock-enabled", havingValue = "true", matchIfMissing = true)
 public class AiTranslateServiceImplV2 implements AiTranslateService {
 
     private final SystemConfigService systemConfigService;
@@ -49,7 +49,7 @@ public class AiTranslateServiceImplV2 implements AiTranslateService {
     }
 
     @Override
-    public String translate(String text, String targetLang, long tenantId) {
+    public String translate(String text, String targetLang, long tenantId, String modelOverride) {
         log.info("Translating text for tenant {}, targetLang: {}", tenantId, targetLang);
 
         // 检查余额

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -23,7 +24,8 @@ public class SmsService {
     @Autowired(required = false)
     private Client smsClient;
 
-    private final StringRedisTemplate redisTemplate;
+    @Autowired(required = false)
+    private StringRedisTemplate redisTemplate;
 
     @Value("${aliyun.sms.sign-name:濮院毛衫}")
     private String signName;
@@ -40,8 +42,21 @@ public class SmsService {
     // 验证码过期时间（分钟）
     private static final long SMS_CODE_EXPIRE_MINUTES = 5;
 
-    public SmsService(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    // 内存验证码存储（Redis 不可用时的降级方案）
+    private final ConcurrentHashMap<String, CodeEntry> memoryCodeStore = new ConcurrentHashMap<>();
+
+    private static class CodeEntry {
+        final String code;
+        final long expireAt;
+
+        CodeEntry(String code, long expireAt) {
+            this.code = code;
+            this.expireAt = expireAt;
+        }
+
+        boolean isExpired() {
+            return System.currentTimeMillis() > expireAt;
+        }
     }
 
     /**
@@ -68,7 +83,7 @@ public class SmsService {
             code = "123456";
             logger.info("SMS Mock mode: mobile={}, purpose={}, code={}", mobile, purpose, code);
             String redisKey = buildRedisKey(mobile, purpose);
-            redisTemplate.opsForValue().set(redisKey, code, SMS_CODE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+            storeCode(redisKey, code);
             return;
         }
 
@@ -91,8 +106,8 @@ public class SmsService {
             if ("OK".equals(response.body.message)) {
                 // 将验证码存入 Redis，设置过期时间
                 String redisKey = buildRedisKey(mobile, purpose);
-                redisTemplate.opsForValue().set(redisKey, code, SMS_CODE_EXPIRE_MINUTES, TimeUnit.MINUTES);
-                logger.info("SMS code stored in Redis - key: {}", redisKey);
+                storeCode(redisKey, code);
+                logger.info("SMS code stored - key: {}", redisKey);
             } else {
                 logger.error("SMS send failed - response: {}", response.body.message);
                 throw new AppException(ErrorCode.INTERNAL_ERROR, "failed to send SMS");
@@ -111,7 +126,7 @@ public class SmsService {
      */
     public boolean verifySmsCode(String mobile, String code, String purpose) {
         String redisKey = buildRedisKey(mobile, purpose);
-        String storedCode = redisTemplate.opsForValue().get(redisKey);
+        String storedCode = retrieveCode(redisKey);
 
         if (storedCode == null) {
             logger.warn("SMS code expired or not found - mobile: {}, purpose: {}", mobile, purpose);
@@ -121,13 +136,63 @@ public class SmsService {
         boolean valid = storedCode.equals(code);
         if (valid) {
             // 验证成功后删除验证码
-            redisTemplate.delete(redisKey);
+            deleteCode(redisKey);
             logger.info("SMS code verified successfully - mobile: {}, purpose: {}", mobile, purpose);
         } else {
             logger.warn("SMS code verification failed - mobile: {}, purpose: {}", mobile, purpose);
         }
 
         return valid;
+    }
+
+    /**
+     * 存储验证码（优先 Redis，降级到内存）
+     */
+    private void storeCode(String key, String code) {
+        if (redisTemplate != null) {
+            try {
+                redisTemplate.opsForValue().set(key, code, SMS_CODE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+                return;
+            } catch (Exception e) {
+                logger.warn("Redis store failed, falling back to memory: {}", e.getMessage());
+            }
+        }
+        long expireAt = System.currentTimeMillis() + SMS_CODE_EXPIRE_MINUTES * 60 * 1000;
+        memoryCodeStore.put(key, new CodeEntry(code, expireAt));
+    }
+
+    /**
+     * 获取验证码（优先 Redis，降级到内存）
+     */
+    private String retrieveCode(String key) {
+        if (redisTemplate != null) {
+            try {
+                return redisTemplate.opsForValue().get(key);
+            } catch (Exception e) {
+                logger.warn("Redis retrieve failed, falling back to memory: {}", e.getMessage());
+            }
+        }
+        CodeEntry entry = memoryCodeStore.get(key);
+        if (entry == null || entry.isExpired()) {
+            memoryCodeStore.remove(key);
+            return null;
+        }
+        return entry.code;
+    }
+
+    /**
+     * 删除验证码（优先 Redis，降级到内存）
+     */
+    private void deleteCode(String key) {
+        if (redisTemplate != null) {
+            try {
+                redisTemplate.delete(key);
+                return;
+            } catch (Exception e) {
+                logger.warn("Redis delete failed, falling back to memory: {}", e.getMessage());
+            }
+        }
+        memoryCodeStore.remove(key);
     }
 
     private String buildRedisKey(String mobile, String purpose) {

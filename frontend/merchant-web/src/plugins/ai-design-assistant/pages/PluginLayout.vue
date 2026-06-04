@@ -117,14 +117,22 @@ const visibleMenus = computed(() => {
   if (!currentRole) {
     return pluginMenus
   }
-  return pluginMenus.filter((menu) => {
+  const filtered = pluginMenus.filter((menu) => {
     // 直接匹配
     if (menu.roles.includes(currentRole)) return true
     // boss 与 merchant_owner 互认
     if (currentRole === 'merchant_owner' && menu.roles.includes('boss')) return true
     if (currentRole === 'boss' && menu.roles.includes('merchant_owner')) return true
+    // merchant_operator / tenant_operator → operator 互认
+    if ((currentRole === 'merchant_operator' || currentRole === 'tenant_operator') && menu.roles.includes('operator')) return true
+    // merchant_viewer / tenant_viewer → viewer 互认
+    if ((currentRole === 'merchant_viewer' || currentRole === 'tenant_viewer') && menu.roles.includes('viewer')) return true
+    // tenant_admin → 显示全部菜单
+    if (currentRole === 'tenant_admin') return true
     return false
   })
+  // 兜底：如果过滤后没有菜单，显示全部（避免白屏）
+  return filtered.length > 0 ? filtered : pluginMenus
 })
 
 // 判断当前路由是否激活

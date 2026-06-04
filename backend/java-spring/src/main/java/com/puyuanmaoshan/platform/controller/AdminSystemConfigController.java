@@ -3,6 +3,7 @@ package com.puyuanmaoshan.platform.controller;
 import com.puyuanmaoshan.platform.dto.ApiResponse;
 import com.puyuanmaoshan.platform.dto.SystemConfigDtos.*;
 import com.puyuanmaoshan.platform.entity.SystemConfig;
+import com.puyuanmaoshan.platform.service.AiProviderConfigService;
 import com.puyuanmaoshan.platform.service.SystemConfigService;
 import com.puyuanmaoshan.platform.util.CryptoUtil;
 import com.puyuanmaoshan.platform.util.RequestContextUtil;
@@ -25,6 +26,7 @@ public class AdminSystemConfigController {
 
     private final SystemConfigService systemConfigService;
     private final CryptoUtil cryptoUtil;
+    private final AiProviderConfigService aiProviderConfigService;
 
     /**
      * 获取所有配置分组
@@ -229,5 +231,48 @@ public class AdminSystemConfigController {
             @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
         TestConfigResponse response = systemConfigService.testConfig(request.getId());
         return ApiResponse.ok(response, RequestContextUtil.resolveRequestId(requestId, "req-admin-config-test"));
+    }
+
+    /**
+     * 获取全局 AI 提供商配置（脱敏）
+     */
+    @GetMapping("/ai-provider")
+    public ApiResponse<Map<String, String>> getAiProviderConfig(
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
+        String baseUrl = aiProviderConfigService.getBaseUrl();
+        String apiKey = aiProviderConfigService.getApiKey();
+        String defaultModel = aiProviderConfigService.getDefaultModel();
+
+        Map<String, String> data = new HashMap<>();
+        data.put("base_url", baseUrl);
+        data.put("api_key", apiKey != null && !apiKey.isEmpty() ? cryptoUtil.maskApiKey(apiKey) : "");
+        data.put("default_model", defaultModel);
+        data.put("has_api_key", String.valueOf(apiKey != null && !apiKey.isEmpty()));
+
+        return ApiResponse.ok(data, RequestContextUtil.resolveRequestId(requestId, "req-admin-config-ai-provider"));
+    }
+
+    /**
+     * 保存全局 AI 提供商配置
+     * PUT /api/admin/system-config/config/ai
+     */
+    @PutMapping("/config/ai")
+    public ApiResponse<Map<String, String>> saveAiProviderConfig(
+            @RequestBody Map<String, String> request,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
+        String baseUrl = request.get("base_url");
+        String apiKey = request.get("api_key");
+        String defaultModel = request.get("default_model");
+
+        aiProviderConfigService.updateAiProviderConfig(baseUrl, apiKey, defaultModel);
+
+        Map<String, String> data = new HashMap<>();
+        data.put("status", "saved");
+        data.put("caches_evicted", "true");
+        data.put("base_url", baseUrl != null ? baseUrl : aiProviderConfigService.getBaseUrl());
+        data.put("default_model", defaultModel != null ? defaultModel : aiProviderConfigService.getDefaultModel());
+        data.put("has_api_key", String.valueOf(apiKey != null && !apiKey.isEmpty()));
+
+        return ApiResponse.ok(data, RequestContextUtil.resolveRequestId(requestId, "req-admin-config-ai-save"));
     }
 }

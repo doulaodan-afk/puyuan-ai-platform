@@ -13,7 +13,19 @@
         <RouterLink to="/admin/billing">账单</RouterLink>
         <RouterLink to="/admin/supplier-review">面料商</RouterLink>
         <RouterLink to="/admin/audit">审计</RouterLink>
-        <RouterLink to="/admin/system-config">系统配置</RouterLink>
+        <div class="dropdown-wrapper" @mouseenter="aiConfigOpen = true" @mouseleave="aiConfigOpen = false">
+          <span class="dropdown-trigger" :class="{ active: isAiConfigActive }">
+            AI 配置
+            <el-icon class="arrow-icon"><ArrowDown /></el-icon>
+          </span>
+          <Transition name="dropdown-fade">
+            <div v-if="aiConfigOpen" class="dropdown-menu">
+              <RouterLink to="/admin/ai-config/providers" class="dropdown-item">AI 提供商</RouterLink>
+              <RouterLink to="/admin/ai-config/scenes" class="dropdown-item">场景模型</RouterLink>
+            </div>
+          </Transition>
+        </div>
+        <RouterLink to="/admin/system-config">对象存储</RouterLink>
       </nav>
       <div class="actions">
         <ThemeToggle class="theme-toggle" />
@@ -65,9 +77,24 @@
               <el-icon><List /></el-icon>
               <span>审计</span>
             </RouterLink>
+            <div class="mobile-submenu-group">
+              <div class="mobile-submenu-trigger" @click="mobileAiConfigOpen = !mobileAiConfigOpen">
+                <el-icon><Cpu /></el-icon>
+                <span>AI 配置</span>
+                <el-icon class="submenu-arrow" :class="{ rotated: mobileAiConfigOpen }"><ArrowDown /></el-icon>
+              </div>
+              <div v-if="mobileAiConfigOpen" class="mobile-submenu-items">
+                <RouterLink to="/admin/ai-config/providers" @click="mobileMenuOpen = false; mobileAiConfigOpen = false">
+                  <span>AI 提供商</span>
+                </RouterLink>
+                <RouterLink to="/admin/ai-config/scenes" @click="mobileMenuOpen = false; mobileAiConfigOpen = false">
+                  <span>场景模型</span>
+                </RouterLink>
+              </div>
+            </div>
             <RouterLink to="/admin/system-config" @click="mobileMenuOpen = false">
               <el-icon><Setting /></el-icon>
-              <span>系统配置</span>
+              <span>对象存储</span>
             </RouterLink>
           </div>
           <div class="mobile-nav-footer">
@@ -87,15 +114,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { Menu, Close, SwitchButton, DataLine, OfficeBuilding, Grid, Tickets, Document, Goods, List, Setting } from '@element-plus/icons-vue'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Menu, Close, SwitchButton, DataLine, OfficeBuilding, Grid, Tickets, Document, Goods, List, Setting, Cpu, ArrowDown } from '@element-plus/icons-vue'
 import ThemeToggle from "./components/ThemeToggle.vue";
 import { useAdminAuthStore } from "./stores/adminAuth";
 
+const route = useRoute()
 const router = useRouter()
 const auth = useAdminAuthStore()
 const mobileMenuOpen = ref(false)
+const aiConfigOpen = ref(false)
+const mobileAiConfigOpen = ref(false)
+
+const isAiConfigActive = computed(() => {
+  return route.path.startsWith('/admin/ai-config')
+})
 
 function handleLogout() {
   mobileMenuOpen.value = false
@@ -207,6 +241,85 @@ function handleLogout() {
 .desktop-nav a.router-link-active {
   color: hsl(var(--primary));
   background: hsl(var(--primary) / 0.1);
+}
+
+/* Dropdown Menu */
+.dropdown-wrapper {
+  position: relative;
+}
+
+.dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: calc(var(--radius) - 4px);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.dropdown-trigger:hover,
+.dropdown-trigger.active {
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
+}
+
+.arrow-icon {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 140px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  z-index: 60;
+}
+
+.dropdown-item {
+  display: block;
+  text-decoration: none;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: calc(var(--radius) - 6px);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  color: hsl(var(--foreground));
+  background: hsl(var(--accent));
+}
+
+.dropdown-item.router-link-active {
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
+}
+
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 /* Actions */
@@ -334,6 +447,64 @@ function handleLogout() {
 }
 
 .mobile-nav-links a.router-link-active {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+}
+
+/* Mobile submenu */
+.mobile-submenu-group {
+  margin-bottom: 4px;
+}
+
+.mobile-submenu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: hsl(var(--muted-foreground));
+  border-radius: calc(var(--radius) - 4px);
+  transition: all 0.2s ease;
+  font-size: 15px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mobile-submenu-trigger:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}
+
+.submenu-arrow {
+  font-size: 12px;
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.submenu-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.mobile-submenu-items {
+  padding-left: 28px;
+}
+
+.mobile-submenu-items a {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: hsl(var(--muted-foreground));
+  border-radius: calc(var(--radius) - 4px);
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.mobile-submenu-items a:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}
+
+.mobile-submenu-items a.router-link-active {
   background: hsl(var(--primary) / 0.1);
   color: hsl(var(--primary));
 }

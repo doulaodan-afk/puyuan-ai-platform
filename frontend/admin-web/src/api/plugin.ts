@@ -8,6 +8,7 @@ export interface PluginListItem {
   version: string;
   billing_type: string;
   default_token_cost: number;
+  ai_model?: string;
   description?: string;
   icon_url?: string;
   backend_api?: string;
@@ -17,6 +18,11 @@ export interface PluginListItem {
   gray_tenant_count: number;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface AiModelItem {
+  id: string;
+  owned_by: string;
 }
 
 export interface UploadPluginResponse {
@@ -120,4 +126,18 @@ export async function listTenants(
   return adminRequest<{ list: TenantItem[]; page: number; page_size: number; total: number }>(
     `/api/v1/admin/plugins/tenants?${params.toString()}`
   );
+}
+
+// ========== AI Model API ==========
+
+export async function getAiModels(): Promise<AiModelItem[]> {
+  return adminRequest<AiModelItem[]>("/api/v1/admin/ai/models");
+}
+
+export async function updatePluginModel(pluginId: string, aiModel: string): Promise<void> {
+  return adminRequest<void>(`/api/v1/admin/ai/plugins/${pluginId}/model`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ai_model: aiModel }),
+  });
 }

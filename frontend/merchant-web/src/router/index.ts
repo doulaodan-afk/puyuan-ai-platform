@@ -3,7 +3,7 @@ import { merchantRoutes } from "./routes";
 import { setupRouterGuards } from "./guards";
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory("/merchant/"),
   routes: merchantRoutes,
 });
 

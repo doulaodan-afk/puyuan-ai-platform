@@ -69,6 +69,9 @@ public class Plugin {
     @TableField("default_token_cost")
     private Integer defaultTokenCost;
 
+    @TableField("ai_model")
+    private String aiModel;
+
     @TableField("status")
     private Integer status;
 

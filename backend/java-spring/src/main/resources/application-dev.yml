@@ -30,6 +30,17 @@ spring:
 # Temporarily disable rate limiter until Redis is available
 rate-limit:
   enabled: false
+  tenant:
+    default-rpm: 10
+    premium-rpm: 100
+    burst-multiplier: 2.0
+
+# AI 多 Key 轮询配置
+ai:
+  multi-key:
+    enabled: true
+    key-cooldown-seconds: 60
+    max-retry-attempts: 3
 
 mybatis-plus:
   configuration:
@@ -53,13 +64,31 @@ logging:
 app:
   base-url: http://localhost:8080
   frontend-url: http://localhost:5173
+  crypto:
+    secret-key: ${CRYPTO_SECRET_KEY:puyuanmaoshan-crypto-dev-secret-key}
   security:
     jwt-secret: ${JWT_SECRET:puyuanmaoshan-dev-jwt-secret-2026}
     jwt-expire-hours: 168
   ai:
+    mock-enabled: true
     mock-image-url: https://via.placeholder.com/300x200
     mock-script-response: "这是一个示例脚本"
     mock-translate-response: "Translated text"
+    # AI 提供商配置（OpenAI 兼容接口）
+    base-url: https://api.openai.com/v1
+    api-key: ${AI_API_KEY:}
+    models:
+      default: DeepSeek-V3
+      script: z-ai/glm-4.7
+      image: qwen-vl-max-2025-01-2
+      translate: DeepSeek-V3
+    # AI 推荐配置
+    recommendation:
+      enabled: true
+      default-prompt: "根据场景类型{scene_code}（{scene_description}），从以下模型列表中选择最适合的3个模型，按优先级排序。返回JSON格式。"
+  plugin:
+    default:
+      ai-model: DeepSeek-V3
 
 # 阿里云短信配置（开发环境禁用）
 aliyun:

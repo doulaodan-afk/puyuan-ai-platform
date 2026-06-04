@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "app.ai.mock-enabled", havingValue = "true", matchIfMissing = true)
 public class AiImageServiceImplV2 implements AiImageService {
 
     private final SystemConfigService systemConfigService;
@@ -42,7 +42,7 @@ public class AiImageServiceImplV2 implements AiImageService {
     }
 
     @Override
-    public String generateImage(String prompt, String size, long tenantId) {
+    public String generateImage(String prompt, String size, long tenantId, String modelOverride) {
         log.info("Generating image for tenant {}, size: {}, prompt: {}", tenantId, size, prompt);
 
         // 检查余额

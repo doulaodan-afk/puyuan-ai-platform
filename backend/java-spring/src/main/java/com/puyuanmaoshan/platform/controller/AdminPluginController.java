@@ -73,6 +73,7 @@ public class AdminPluginController {
                 grayTenantCount = item.getGrayTenantIds().split(",").length;
             }
             m.put("gray_tenant_count", grayTenantCount);
+            m.put("ai_model", item.getAiModel());
             // 新增生命周期字段
             m.put("created_by", item.getCreatedBy());
             m.put("tested_at", item.getTestedAt() != null ? item.getTestedAt().toString() : null);

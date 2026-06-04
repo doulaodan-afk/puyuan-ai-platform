@@ -18,211 +18,7 @@
       </button>
     </div>
 
-    <!-- AI 图片生成配置 -->
-    <section v-if="activeTab === 'ai_image'" class="panel">
-      <h2>AI 图片生成配置</h2>
-
-      <!-- 添加/编辑表单 -->
-      <div v-if="showForm" class="form-panel">
-        <h3>{{ editingId ? '编辑配置' : '添加配置' }}</h3>
-        <form class="form-grid" @submit.prevent="saveAiImageConfig">
-          <input v-model.trim="aiImageForm.providerName" placeholder="提供商名称 (如 OpenAI)" required />
-          <input v-model.trim="aiImageForm.modelName" placeholder="模型名称 (如 dall-e-3)" required />
-          <input
-            v-model.trim="aiImageForm.apiKey"
-            type="password"
-            placeholder="API Key (如 sk-...)"
-            required
-          />
-          <input v-model.trim="aiImageForm.endpoint" placeholder="API 端点 (如 https://api.openai.com/v1)" required />
-          <input v-model.number="aiImageForm.priority" type="number" placeholder="优先级 (1-10)" min="1" max="10" />
-          <label class="checkbox">
-            <input v-model="aiImageForm.enabled" type="checkbox" />
-            启用
-          </label>
-          <div class="form-actions">
-            <button type="submit">{{ editingId ? '更新' : '保存' }}</button>
-            <button type="button" @click="showForm = false">取消</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- 配置列表 -->
-      <div v-else>
-        <button @click="showAddForm" class="add-btn">添加配置</button>
-        <table v-if="aiImageConfigs.length > 0" class="table">
-          <thead>
-            <tr>
-              <th>提供商</th>
-              <th>模型</th>
-              <th>API Key</th>
-              <th>端点</th>
-              <th>优先级</th>
-              <th>状态</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(config, index) in aiImageConfigs" :key="index">
-              <td>{{ config.provider_name }}</td>
-              <td>{{ config.model_name }}</td>
-              <td class="masked">{{ config.api_key }}</td>
-              <td>{{ config.endpoint }}</td>
-              <td>{{ config.priority }}</td>
-              <td>
-                <span :class="config.enabled ? 'status-online' : 'status-offline'">
-                  {{ config.enabled ? '启用' : '禁用' }}
-                </span>
-              </td>
-              <td class="actions">
-                <button @click="editConfig(config, 'ai_image')">编辑</button>
-                <button @click="testConfig(config, 'ai_image')">测试</button>
-                <button @click="deleteConfig(config, 'ai_image')">删除</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else class="empty">暂无配置，点击"添加配置"开始</p>
-      </div>
-    </section>
-
-    <!-- AI 文本生成配置 -->
-    <section v-if="activeTab === 'ai_text'" class="panel">
-      <h2>AI 文本生成配置</h2>
-
-      <!-- 添加/编辑表单 -->
-      <div v-if="showForm" class="form-panel">
-        <h3>{{ editingId ? '编辑配置' : '添加配置' }}</h3>
-        <form class="form-grid" @submit.prevent="saveAiTextConfig">
-          <input v-model.trim="aiTextForm.providerName" placeholder="提供商名称 (如 OpenAI)" required />
-          <input v-model.trim="aiTextForm.modelName" placeholder="模型名称 (如 gpt-4o)" required />
-          <input
-            v-model.trim="aiTextForm.apiKey"
-            type="password"
-            placeholder="API Key (如 sk-...)"
-            required
-          />
-          <input v-model.trim="aiTextForm.endpoint" placeholder="API 端点 (如 https://api.openai.com/v1)" required />
-          <input v-model.number="aiTextForm.priority" type="number" placeholder="优先级 (1-10)" min="1" max="10" />
-          <label class="checkbox">
-            <input v-model="aiTextForm.enabled" type="checkbox" />
-            启用
-          </label>
-          <div class="form-actions">
-            <button type="submit">{{ editingId ? '更新' : '保存' }}</button>
-            <button type="button" @click="showForm = false">取消</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- 配置列表 -->
-      <div v-else>
-        <button @click="showAddForm" class="add-btn">添加配置</button>
-        <table v-if="aiTextConfigs.length > 0" class="table">
-          <thead>
-            <tr>
-              <th>提供商</th>
-              <th>模型</th>
-              <th>API Key</th>
-              <th>端点</th>
-              <th>优先级</th>
-              <th>状态</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(config, index) in aiTextConfigs" :key="index">
-              <td>{{ config.provider_name }}</td>
-              <td>{{ config.model_name }}</td>
-              <td class="masked">{{ config.api_key }}</td>
-              <td>{{ config.endpoint }}</td>
-              <td>{{ config.priority }}</td>
-              <td>
-                <span :class="config.enabled ? 'status-online' : 'status-offline'">
-                  {{ config.enabled ? '启用' : '禁用' }}
-                </span>
-              </td>
-              <td class="actions">
-                <button @click="editConfig(config, 'ai_text')">编辑</button>
-                <button @click="testConfig(config, 'ai_text')">测试</button>
-                <button @click="deleteConfig(config, 'ai_text')">删除</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else class="empty">暂无配置，点击"添加配置"开始</p>
-      </div>
-    </section>
-
-    <!-- AI 翻译配置 -->
-    <section v-if="activeTab === 'ai_translate'" class="panel">
-      <h2>AI 翻译配置</h2>
-
-      <!-- 添加/编辑表单 -->
-      <div v-if="showForm" class="form-panel">
-        <h3>{{ editingId ? '编辑配置' : '添加配置' }}</h3>
-        <form class="form-grid" @submit.prevent="saveAiTranslateConfig">
-          <input v-model.trim="aiTranslateForm.providerName" placeholder="提供商名称 (如 OpenAI)" required />
-          <input v-model.trim="aiTranslateForm.modelName" placeholder="模型名称 (如 gpt-4o-mini)" required />
-          <input
-            v-model.trim="aiTranslateForm.apiKey"
-            type="password"
-            placeholder="API Key (如 sk-...)"
-            required
-          />
-          <input v-model.trim="aiTranslateForm.endpoint" placeholder="API 端点 (如 https://api.openai.com/v1)" required />
-          <input v-model.number="aiTranslateForm.priority" type="number" placeholder="优先级 (1-10)" min="1" max="10" />
-          <label class="checkbox">
-            <input v-model="aiTranslateForm.enabled" type="checkbox" />
-            启用
-          </label>
-          <div class="form-actions">
-            <button type="submit">{{ editingId ? '更新' : '保存' }}</button>
-            <button type="button" @click="showForm = false">取消</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- 配置列表 -->
-      <div v-else>
-        <button @click="showAddForm" class="add-btn">添加配置</button>
-        <table v-if="aiTranslateConfigs.length > 0" class="table">
-          <thead>
-            <tr>
-              <th>提供商</th>
-              <th>模型</th>
-              <th>API Key</th>
-              <th>端点</th>
-              <th>优先级</th>
-              <th>状态</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(config, index) in aiTranslateConfigs" :key="index">
-              <td>{{ config.provider_name }}</td>
-              <td>{{ config.model_name }}</td>
-              <td class="masked">{{ config.api_key }}</td>
-              <td>{{ config.endpoint }}</td>
-              <td>{{ config.priority }}</td>
-              <td>
-                <span :class="config.enabled ? 'status-online' : 'status-offline'">
-                  {{ config.enabled ? '启用' : '禁用' }}
-                </span>
-              </td>
-              <td class="actions">
-                <button @click="editConfig(config, 'ai_translate')">编辑</button>
-                <button @click="testConfig(config, 'ai_translate')">测试</button>
-                <button @click="deleteConfig(config, 'ai_translate')">删除</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else class="empty">暂无配置，点击"添加配置"开始</p>
-      </div>
-    </section>
-
-    <!-- OSS 配置 -->
+    <!-- 对象存储 (OSS) 配置 -->
     <section v-if="activeTab === 'oss'" class="panel">
       <h2>对象存储 (OSS) 配置</h2>
 
@@ -332,49 +128,16 @@ interface Tabs {
 }
 
 const tabs: Tabs[] = [
-  { value: "ai_image", label: "AI 图片生成" },
-  { value: "ai_text", label: "AI 文本生成" },
-  { value: "ai_translate", label: "AI 翻译" },
   { value: "oss", label: "对象存储" },
 ];
 
-const activeTab = ref("ai_image");
+const activeTab = ref("oss");
 const errorMessage = ref("");
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
 const testResult = ref<TestConfigResponse | null>(null);
 
-const aiImageConfigs = ref<AiProviderConfig[]>([]);
-const aiTextConfigs = ref<AiProviderConfig[]>([]);
-const aiTranslateConfigs = ref<AiProviderConfig[]>([]);
 const ossConfigs = ref<OssConfig[]>([]);
-
-const aiImageForm = reactive({
-  providerName: "",
-  modelName: "",
-  apiKey: "",
-  endpoint: "",
-  priority: 1,
-  enabled: true,
-});
-
-const aiTextForm = reactive({
-  providerName: "",
-  modelName: "",
-  apiKey: "",
-  endpoint: "",
-  priority: 1,
-  enabled: true,
-});
-
-const aiTranslateForm = reactive({
-  providerName: "",
-  modelName: "",
-  apiKey: "",
-  endpoint: "",
-  priority: 1,
-  enabled: true,
-});
 
 const ossForm = reactive({
   providerName: "",
@@ -398,13 +161,7 @@ function switchTab(tab: string) {
 async function loadConfigs() {
   errorMessage.value = "";
   try {
-    if (activeTab.value === "ai_image") {
-      aiImageConfigs.value = await getAiConfigs("ai_image");
-    } else if (activeTab.value === "ai_text") {
-      aiTextConfigs.value = await getAiConfigs("ai_text");
-    } else if (activeTab.value === "ai_translate") {
-      aiTranslateConfigs.value = await getAiConfigs("ai_translate");
-    } else if (activeTab.value === "oss") {
+    if (activeTab.value === "oss") {
       ossConfigs.value = await getOssConfigs();
     }
   } catch (error) {
@@ -419,27 +176,6 @@ function showAddForm() {
 }
 
 function resetForms() {
-  aiImageForm.providerName = "";
-  aiImageForm.modelName = "";
-  aiImageForm.apiKey = "";
-  aiImageForm.endpoint = "";
-  aiImageForm.priority = 1;
-  aiImageForm.enabled = true;
-
-  aiTextForm.providerName = "";
-  aiTextForm.modelName = "";
-  aiTextForm.apiKey = "";
-  aiTextForm.endpoint = "";
-  aiTextForm.priority = 1;
-  aiTextForm.enabled = true;
-
-  aiTranslateForm.providerName = "";
-  aiTranslateForm.modelName = "";
-  aiTranslateForm.apiKey = "";
-  aiTranslateForm.endpoint = "";
-  aiTranslateForm.priority = 1;
-  aiTranslateForm.enabled = true;
-
   ossForm.providerName = "";
   ossForm.accessKeyId = "";
   ossForm.accessKeySecret = "";
@@ -454,31 +190,7 @@ function editConfig(config: AiProviderConfig | OssConfig, type: string) {
   showForm.value = true;
   editingId.value = config.config_id ?? null;
 
-  if (type === "ai_image") {
-    const c = config as AiProviderConfig;
-    aiImageForm.providerName = c.provider_name;
-    aiImageForm.modelName = c.model_name;
-    aiImageForm.apiKey = c.api_key;
-    aiImageForm.endpoint = c.endpoint;
-    aiImageForm.priority = c.priority;
-    aiImageForm.enabled = c.enabled;
-  } else if (type === "ai_text") {
-    const c = config as AiProviderConfig;
-    aiTextForm.providerName = c.provider_name;
-    aiTextForm.modelName = c.model_name;
-    aiTextForm.apiKey = c.api_key;
-    aiTextForm.endpoint = c.endpoint;
-    aiTextForm.priority = c.priority;
-    aiTextForm.enabled = c.enabled;
-  } else if (type === "ai_translate") {
-    const c = config as AiProviderConfig;
-    aiTranslateForm.providerName = c.provider_name;
-    aiTranslateForm.modelName = c.model_name;
-    aiTranslateForm.apiKey = c.api_key;
-    aiTranslateForm.endpoint = c.endpoint;
-    aiTranslateForm.priority = c.priority;
-    aiTranslateForm.enabled = c.enabled;
-  } else if (type === "oss") {
+  if (type === "oss") {
     const c = config as OssConfig;
     ossForm.providerName = c.provider_name;
     ossForm.accessKeyId = c.access_key_id;
@@ -488,63 +200,6 @@ function editConfig(config: AiProviderConfig | OssConfig, type: string) {
     ossForm.region = c.region;
     ossForm.priority = c.priority;
     ossForm.enabled = c.enabled;
-  }
-}
-
-async function saveAiImageConfig() {
-  try {
-    await saveAiConfig({
-      group: "ai_image",
-      provider_name: aiImageForm.providerName,
-      model_name: aiImageForm.modelName,
-      api_key: aiImageForm.apiKey,
-      endpoint: aiImageForm.endpoint,
-      priority: aiImageForm.priority,
-      enabled: aiImageForm.enabled,
-    });
-    showForm.value = false;
-    resetForms();
-    await loadConfigs();
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "保存失败";
-  }
-}
-
-async function saveAiTextConfig() {
-  try {
-    await saveAiConfig({
-      group: "ai_text",
-      provider_name: aiTextForm.providerName,
-      model_name: aiTextForm.modelName,
-      api_key: aiTextForm.apiKey,
-      endpoint: aiTextForm.endpoint,
-      priority: aiTextForm.priority,
-      enabled: aiTextForm.enabled,
-    });
-    showForm.value = false;
-    resetForms();
-    await loadConfigs();
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "保存失败";
-  }
-}
-
-async function saveAiTranslateConfig() {
-  try {
-    await saveAiConfig({
-      group: "ai_translate",
-      provider_name: aiTranslateForm.providerName,
-      model_name: aiTranslateForm.modelName,
-      api_key: aiTranslateForm.apiKey,
-      endpoint: aiTranslateForm.endpoint,
-      priority: aiTranslateForm.priority,
-      enabled: aiTranslateForm.enabled,
-    });
-    showForm.value = false;
-    resetForms();
-    await loadConfigs();
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "保存失败";
   }
 }
 
@@ -795,6 +450,39 @@ onMounted(() => {
     padding: 12px 16px;
     font-size: 15px;
   }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+}
+
+.form-field input {
+  padding: 10px 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  font-size: 14px;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+}
+
+.hint {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 16px;
+}
+
+.hint-inline {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin-top: 2px;
 }
 
 .checkbox {

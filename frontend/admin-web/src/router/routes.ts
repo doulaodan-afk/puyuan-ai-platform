@@ -118,9 +118,31 @@ export const adminRoutes: RouteRecordRaw[] = [
     name: "AdminSystemConfig",
     component: () => import("../pages/AdminSystemConfigPage.vue"),
     meta: {
-      title: "系统配置管理",
+      title: "对象存储",
       requiresAuth: true,
       roles: ["platform_super_admin"],
+    },
+  },
+  {
+    path: "/admin/ai-config/providers",
+    name: "AdminAiProviders",
+    component: () => import("../pages/AdminAiProviderPage.vue"),
+    meta: {
+      title: "AI 提供商",
+      requiresAuth: true,
+      roles: ["platform_super_admin", "platform_ops"],
+      parentMenu: "AI 配置",
+    },
+  },
+  {
+    path: "/admin/ai-config/scenes",
+    name: "AdminAiScenes",
+    component: () => import("../pages/AdminAiScenePage.vue"),
+    meta: {
+      title: "场景模型",
+      requiresAuth: true,
+      roles: ["platform_super_admin", "platform_ops"],
+      parentMenu: "AI 配置",
     },
   },
 ];

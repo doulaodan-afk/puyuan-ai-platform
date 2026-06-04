@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "app.ai.mock-enabled", havingValue = "true", matchIfMissing = true)
 public class AiScriptServiceImplV2 implements AiScriptService {
 
     private final SystemConfigService systemConfigService;
@@ -42,7 +42,7 @@ public class AiScriptServiceImplV2 implements AiScriptService {
     }
 
     @Override
-    public String generateScript(String productDesc, String productUrl, String scriptType, long tenantId) {
+    public String generateScript(String productDesc, String productUrl, String scriptType, long tenantId, String modelOverride) {
         log.info("Generating script for tenant {}, type: {}, desc: {}", tenantId, scriptType, productDesc);
 
         // 检查余额

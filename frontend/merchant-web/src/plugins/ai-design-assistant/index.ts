@@ -59,5 +59,8 @@ export { pluginRoutes }
 // 导出 Store
 export { useDesignAssistantStore }
 
-// 默认导出 install 函数
-export default install
+// 默认导出 Plugin 接口对象
+export default {
+  name: 'ai-design-assistant',
+  install,
+}

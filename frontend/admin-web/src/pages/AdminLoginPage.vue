@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAdminAuthStore } from "../stores/adminAuth";
 
@@ -39,6 +39,11 @@ const mobileValid = computed(() => /^1[3-9]\d{9}$/.test(mobile.value));
 const route = useRoute();
 const router = useRouter();
 const auth = useAdminAuthStore();
+
+// 进入登录页时清除旧的认证状态，避免路由守卫直接放行
+onMounted(() => {
+  auth.clearAuth();
+});
 
 function resolveRedirect(): string {
   const redirect = route.query.redirect;

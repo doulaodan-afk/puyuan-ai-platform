@@ -47,6 +47,7 @@
               <el-icon><Grid /></el-icon>
               <span>插件</span>
             </RouterLink>
+
             <RouterLink to="/account/balance" @click="mobileMenuOpen = false">
               <el-icon><Wallet /></el-icon>
               <span>账户</span>

@@ -16,6 +16,7 @@
           <th>名称</th>
           <th>版本</th>
           <th>计费</th>
+          <th>AI 模型</th>
           <th>生命周期状态</th>
           <th>创建人</th>
           <th>发布时间</th>
@@ -41,6 +42,10 @@
             <span v-else class="billing-tag">{{ item.billing_type }}</span>
           </td>
           <td>
+            <span v-if="item.ai_model" class="model-tag">{{ item.ai_model }}</span>
+            <span v-else class="model-tag model-default">默认</span>
+          </td>
+          <td>
             <span :class="'status-badge status-' + item.lifecycle_status">
               {{ statusText(item.lifecycle_status) }}
             </span>
@@ -59,6 +64,7 @@
           <td class="actions">
             <!-- testing -->
             <template v-if="item.lifecycle_status === 'testing'">
+              <button @click="openModelDialog(item)" class="btn-action">模型配置</button>
               <button @click="goSandbox(item.plugin_id)" class="btn-action">沙箱测试</button>
               <button @click="publishFull(item.plugin_id)" class="btn-action btn-primary">发布全量</button>
               <button @click="openGrayDialog(item.plugin_id)" class="btn-action">灰度发布</button>
@@ -66,18 +72,21 @@
             </template>
             <!-- enabled -->
             <template v-else-if="item.lifecycle_status === 'enabled'">
+              <button @click="openModelDialog(item)" class="btn-action">模型配置</button>
               <button @click="goSandbox(item.plugin_id)" class="btn-action">沙箱测试</button>
               <button @click="openGrayDialog(item.plugin_id)" class="btn-action">灰度降级</button>
               <button @click="offlinePlugin(item.plugin_id)" class="btn-action btn-danger">下架</button>
             </template>
             <!-- disabled -->
             <template v-else-if="item.lifecycle_status === 'disabled'">
+              <button @click="openModelDialog(item)" class="btn-action">模型配置</button>
               <button @click="publishFull(item.plugin_id)" class="btn-action btn-primary">重新上架</button>
               <button @click="openGrayDialog(item.plugin_id)" class="btn-action">灰度发布</button>
               <button @click="deletePlugin(item.plugin_id)" class="btn-action btn-danger">删除</button>
             </template>
             <!-- gray -->
             <template v-else-if="item.lifecycle_status === 'gray'">
+              <button @click="openModelDialog(item)" class="btn-action">模型配置</button>
               <button @click="goSandbox(item.plugin_id)" class="btn-action">沙箱测试</button>
               <button @click="publishFull(item.plugin_id)" class="btn-action btn-primary">全量发布</button>
               <button @click="openGrayDialog(item.plugin_id)" class="btn-action">调整灰度</button>
@@ -98,6 +107,14 @@
       :plugin-id="currentPluginId"
       @success="loadPlugins"
     />
+
+    <!-- 模型配置弹窗 -->
+    <ModelConfigDialog
+      v-model:visible="modelDialogVisible"
+      :plugin-id="currentPluginId"
+      :current-model="currentModelValue"
+      @success="loadPlugins"
+    />
   </section>
 </template>
 
@@ -108,6 +125,7 @@ import { Plus } from "@element-plus/icons-vue";
 import { adminRequest } from "../utils/http";
 import UploadPluginDialog from "../components/dialog/UploadPluginDialog.vue";
 import GrayConfigDialog from "../components/dialog/GrayConfigDialog.vue";
+import ModelConfigDialog from "../components/dialog/ModelConfigDialog.vue";
 
 interface PluginItem {
   plugin_id: string;
@@ -115,6 +133,7 @@ interface PluginItem {
   version: string;
   billing_type: string;
   default_token_cost: number;
+  ai_model?: string;
   lifecycle_status: string;
   review_status: string;
   gray_tenant_count: number;
@@ -135,7 +154,9 @@ const errorMessage = ref("");
 const items = ref<PluginItem[]>([]);
 const uploadDialogVisible = ref(false);
 const grayDialogVisible = ref(false);
+const modelDialogVisible = ref(false);
 const currentPluginId = ref("");
+const currentModelValue = ref("");
 
 async function loadPlugins() {
   loading.value = true;
@@ -157,6 +178,12 @@ function openUploadDialog() {
 function openGrayDialog(pluginId: string) {
   currentPluginId.value = pluginId;
   grayDialogVisible.value = true;
+}
+
+function openModelDialog(item: PluginItem) {
+  currentPluginId.value = item.plugin_id;
+  currentModelValue.value = item.ai_model || "";
+  modelDialogVisible.value = true;
 }
 
 function goSandbox(pluginId: string) {
@@ -317,6 +344,24 @@ tbody tr:last-child td {
   color: hsl(var(--primary));
   padding: 2px 8px;
   border-radius: calc(var(--radius) - 6px);
+}
+
+.model-tag {
+  font-size: 12px;
+  background: hsl(260 60% 60% / 0.1);
+  color: hsl(260 60% 60%);
+  padding: 2px 8px;
+  border-radius: calc(var(--radius) - 6px);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.model-default {
+  background: hsl(var(--secondary));
+  color: hsl(var(--muted-foreground));
 }
 
 .status-badge {

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.puyuanmaoshan.platform.entity.AccountWallet;
 import com.puyuanmaoshan.platform.service.AccountWalletService;
+import com.puyuanmaoshan.platform.service.AiInvokeTemplate;
 import com.puyuanmaoshan.platform.service.AiScriptService;
 import com.puyuanmaoshan.platform.service.SubscribeMessageService;
-import com.puyuanmaoshan.platform.service.SystemConfigService;
 import com.puyuanmaoshan.platform.util.RequestContextUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,45 +20,33 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "false")
+@ConditionalOnProperty(name = "app.ai.mock-enabled", havingValue = "false")
 public class AiScriptServiceImpl implements AiScriptService {
 
-    private final SystemConfigService systemConfigService;
     private final AccountWalletService accountWalletService;
     private final SubscribeMessageService subscribeMessageService;
+    private final AiInvokeTemplate aiInvokeTemplate;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-
-    @Value("${app.ai.base-url:https://api.openai.com/v1}")
-    private String aiBaseUrl;
-
-    @Value("${app.ai.api-key:}")
-    private String aiApiKey;
-
-    @Value("${app.ai.models.default:DeepSeek-V3}")
-    private String defaultModel;
-
-    @Value("${app.ai.models.script:z-ai/glm-4.7}")
-    private String scriptModel;
 
     @Value("${account.balance.low-threshold:100}")
     private long balanceLowThreshold;
 
     public AiScriptServiceImpl(
-            SystemConfigService systemConfigService,
             AccountWalletService accountWalletService,
             SubscribeMessageService subscribeMessageService,
+            AiInvokeTemplate aiInvokeTemplate,
             RestTemplate restTemplate) {
-        this.systemConfigService = systemConfigService;
         this.accountWalletService = accountWalletService;
         this.subscribeMessageService = subscribeMessageService;
+        this.aiInvokeTemplate = aiInvokeTemplate;
         this.restTemplate = restTemplate;
         this.objectMapper = new ObjectMapper();
     }
 
     @Override
-    public String generateScript(String productDesc, String productUrl, String scriptType, long tenantId) {
-        log.info("Generating script for tenant {}, type: {}, desc: {}", tenantId, scriptType, productDesc);
+    public String generateScript(String productDesc, String productUrl, String scriptType, long tenantId, String modelOverride) {
+        log.info("Generating script for tenant {}, type: {}, desc: {}, modelOverride: {}", tenantId, scriptType, productDesc, modelOverride);
 
         AccountWallet wallet = accountWalletService.lambdaQuery()
                 .eq(AccountWallet::getTenantId, tenantId)
@@ -86,30 +74,30 @@ public class AiScriptServiceImpl implements AiScriptService {
             }
         }
 
-        String apiKey = aiApiKey;
-        String endpoint = aiBaseUrl;
-        String model = scriptModel;
-
-        try {
-            List<Map<String, String>> providers = systemConfigService.getActiveProviderConfigs("ai_text");
-            for (Map<String, String> provider : providers) {
-                String pApiKey = provider.get("api_key");
-                String pEndpoint = provider.get("endpoint");
-                String pModel = provider.get("model_name");
-                if (pApiKey != null && !pApiKey.isEmpty()) {
-                    apiKey = pApiKey;
-                    if (pEndpoint != null) endpoint = pEndpoint;
-                    if (pModel != null) model = pModel;
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to get AI text config from DB, using defaults: {}", e.getMessage());
-        }
-
         String systemPrompt = buildSystemPrompt(scriptType);
         String userPrompt = buildUserPrompt(productDesc, productUrl, scriptType);
+        String effectiveModel = modelOverride;
 
+        // 使用 AiInvokeTemplate 统一处理多 Key 轮询 + 故障转移
+        return aiInvokeTemplate.invokeWithRetry(
+                AiInvokeTemplate.CallContext.builder()
+                        .sceneCode("summarize")
+                        .tenantId(tenantId)
+                        .modelOverride(modelOverride)
+                        .maxRetries(3)
+                        .build(),
+                resolution -> {
+                    String model = effectiveModel != null && !effectiveModel.isEmpty()
+                            ? effectiveModel : resolution.getModelId();
+                    log.info("Calling script generation: model={} @ {} (provider: {}, keyIndex: {})",
+                            model, resolution.getBaseUrl(), resolution.getProviderName(), resolution.getKeyIndex());
+                    return callChatCompletion(resolution.getBaseUrl(), resolution.getApiKey(),
+                            model, systemPrompt, userPrompt);
+                }
+        );
+    }
+
+    private String callChatCompletion(String endpoint, String apiKey, String model, String systemPrompt, String userPrompt) {
         try {
             String url = endpoint + "/chat/completions";
             HttpHeaders headers = new HttpHeaders();
@@ -142,7 +130,6 @@ public class AiScriptServiceImpl implements AiScriptService {
             log.error("Unexpected AI API response: {}", response);
             throw new RuntimeException("AI脚本生成失败：响应格式异常");
         } catch (Exception e) {
-            log.error("AI script generation failed: {}", e.getMessage(), e);
             throw new RuntimeException("AI脚本生成失败：" + e.getMessage());
         }
     }

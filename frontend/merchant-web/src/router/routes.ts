@@ -8,7 +8,8 @@ export type MerchantRole =
   | "boss"
   | "tenant_admin"
   | "tenant_operator"
-  | "tenant_viewer";
+  | "tenant_viewer"
+  | "platform_super_admin";
 
 export interface AppRouteMeta extends Record<string, unknown> {
   title: string;
@@ -154,6 +155,78 @@ export const merchantRoutes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ["merchant_owner", "boss", "tenant_admin"],
     },
+  },
+  // AI 设计助手插件路由
+  {
+    path: "/plugins/ai-design-assistant",
+    component: () => import("../plugins/ai-design-assistant/pages/PluginLayout.vue"),
+    meta: { title: "AI 设计助手", requiresAuth: true },
+    children: [
+      {
+        path: "",
+        redirect: "/plugins/ai-design-assistant/list",
+      },
+      {
+        path: "list",
+        name: "AiDesignAssistantList",
+        component: () => import("../plugins/ai-design-assistant/pages/requirement-list.vue"),
+        meta: { title: "我的设计需求", requiresAuth: true },
+      },
+      {
+        path: "create",
+        name: "AiDesignAssistantCreate",
+        component: () => import("../plugins/ai-design-assistant/pages/create.vue"),
+        meta: { title: "创建设计需求", requiresAuth: true },
+      },
+      {
+        path: "pending",
+        name: "AiDesignAssistantPending",
+        component: () => import("../plugins/ai-design-assistant/pages/pending-list.vue"),
+        meta: { title: "设计助理待办", requiresAuth: true },
+      },
+      {
+        path: "detail/:id",
+        name: "AiDesignAssistantDetail",
+        component: () => import("../plugins/ai-design-assistant/pages/assistant-detail.vue"),
+        meta: { title: "需求复核与任务编辑", requiresAuth: true },
+      },
+      {
+        path: "tasks",
+        name: "AiDesignAssistantTasks",
+        component: () => import("../plugins/ai-design-assistant/pages/my-tasks.vue"),
+        meta: { title: "我的任务", requiresAuth: true },
+      },
+      {
+        path: "board",
+        name: "AiDesignAssistantBoard",
+        component: () => import("../plugins/ai-design-assistant/pages/board.vue"),
+        meta: { title: "任务看板", requiresAuth: true },
+      },
+      {
+        path: "fabrics",
+        name: "AiDesignAssistantFabrics",
+        component: () => import("../plugins/ai-design-assistant/pages/fabric-manage.vue"),
+        meta: { title: "面料库管理", requiresAuth: true },
+      },
+      {
+        path: "messages",
+        name: "AiDesignAssistantMessages",
+        component: () => import("../plugins/ai-design-assistant/pages/message-list.vue"),
+        meta: { title: "消息中心", requiresAuth: true },
+      },
+      {
+        path: "settings",
+        name: "AiDesignAssistantSettings",
+        component: () => import("../plugins/ai-design-assistant/pages/team-settings.vue"),
+        meta: { title: "成员管理", requiresAuth: true, roles: ["boss"] },
+      },
+      {
+        path: "partners",
+        name: "AiDesignAssistantPartners",
+        component: () => import("../plugins/ai-design-assistant/pages/partner-manage.vue"),
+        meta: { title: "合作方管理", requiresAuth: true, roles: ["boss"] },
+      },
+    ],
   },
 ];
   

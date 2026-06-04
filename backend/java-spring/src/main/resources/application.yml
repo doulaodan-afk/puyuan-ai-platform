@@ -43,6 +43,34 @@ app:
   billing:
     upstream-timeout-seconds: 30
 
+# ============================================================
+# 多 Key 轮询与故障转移配置
+# ============================================================
+ai:
+  multi-key:
+    # 是否启用多 Key 轮询（也可通过 DB system_config 动态控制）
+    enabled: ${AI_MULTI_KEY_ENABLED:true}
+    # Key 调用失败后的冷却时间（秒）
+    key-cooldown-seconds: ${AI_KEY_COOLDOWN_SECONDS:60}
+    # 全局最大重试次数（含同 Key 和跨提供商）
+    max-retry-attempts: ${AI_MAX_RETRY_ATTEMPTS:3}
+
+# ============================================================
+# 限流配置（租户分级）
+# ============================================================
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  token-bucket:
+    capacity: 60
+    refill-rate: 1
+  tenant:
+    # 默认租户 RPM
+    default-rpm: ${TENANT_DEFAULT_RPM:10}
+    # 付费租户 RPM
+    premium-rpm: ${TENANT_PREMIUM_RPM:100}
+    # 突发系数（允许短时超过 RPM 限制的倍数）
+    burst-multiplier: ${TENANT_BURST_MULTIPLIER:2.0}
+
 # 微信小程序配置（生产环境通过环境变量覆盖）
 wx:
   miniapp:

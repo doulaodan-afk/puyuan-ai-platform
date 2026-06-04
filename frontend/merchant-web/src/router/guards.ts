@@ -26,6 +26,8 @@ function hasRoutePermission(roleCode: string | null, roles?: string[]): boolean 
     'tenant_admin': ['merchant_owner', 'tenant_admin'],
     'tenant_operator': ['merchant_operator', 'tenant_operator'],
     'tenant_viewer': ['merchant_viewer', 'tenant_viewer'],
+    // Super admin can access all pages
+    'platform_super_admin': ['merchant_owner', 'merchant_operator', 'merchant_editor', 'merchant_viewer', 'boss', 'tenant_admin', 'tenant_operator', 'tenant_viewer', 'platform_super_admin'],
   };
 
   const mappedRoles = roleMap[roleCode] || [roleCode];

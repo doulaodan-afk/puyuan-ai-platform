@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.ai.mock.enabled", havingValue = "false")
+@ConditionalOnProperty(name = "app.ai.mock-enabled", havingValue = "false")
 public class DesignAssistantAiServiceImplReal implements DesignAssistantAiService {
 
     private final PluginConfigMapper pluginConfigMapper;

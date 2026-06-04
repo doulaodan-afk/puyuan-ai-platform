@@ -50,13 +50,20 @@ const plugins = ref<PluginItem[]>([]);
 const loading = ref(false);
 const errorMessage = ref("");
 
-// 插件ID到路由的映射（key 必须与后端 API 返回的 plugin_id 格式一致，使用连字符）
+// 插件ID到路由的映射（key 必须与后端 API 返回的 plugin_id 格式一致）
 const PLUGIN_ROUTES: Record<string, string> = {
+  // 新版 plugin_id（下划线格式，与 seed 数据一致）
+  "ai_image_gen": "/plugins/ai-image",
+  "ai_script_gen": "/plugins/ai-script",
+  "ai_translate": "/plugins/ai-translate",
+  "ai_design_assistant": "/plugins/ai-design-assistant",
+  // 旧版兼容
+  "ai_image_gen_v1": "/plugins/ai-image",
+  "ai_script_gen_v1": "/plugins/ai-script",
+  // 连字符格式兼容
+  "ai-image-gen": "/plugins/ai-image",
   "ai-script-gen": "/plugins/ai-script",
-  "ai-translate": "/plugins/ai-translate",
-  "ai-design-assistant": "/plugins/ai-design-assistant",
-  "ai-image-gen": "/plugins/ai-image-gen",
-  "acme.ai-image-gen": "/plugins/ai-image-gen",
+  "acme.ai-image-gen": "/plugins/ai-image",
 };
 
 function openPlugin(item: PluginItem) {

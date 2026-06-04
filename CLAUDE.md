@@ -70,3 +70,30 @@ npm run build  # 使用 .env.production
 4. **例外情况**：修复导致功能错误的样式问题（如文字重叠、按钮不可见、响应式断裂）允许直接修改，但需在提交时注明修复原因。
 
 5. **代码审查**：每次涉及 UI 的变更，Claude 在输出代码后应主动列出变更的文件和影响范围。
+
+---
+
+## 插件与 AI 模型关联功能（2026-06-03）
+
+**功能概述**：为 plugin 表新增 `ai_model` 字段，支持每个插件绑定特定的 AI 模型。调用时优先使用插件绑定的模型，否则回退到 DB provider 配置或默认模型。
+
+**数据库变更**：
+- `plugin` 表新增 `ai_model VARCHAR(100)` 列（迁移脚本 `V1.3__plugin_ai_model.sql`）
+
+**后端新增/修改**：
+- `Plugin.java` — 新增 `aiModel` 字段
+- `ApiModels.java` — 新增 `UpdatePluginModelRequest`、`AiModelItem` record
+- `AdminAiModelController.java` — 新增 `GET /api/v1/admin/ai/models`（获取模型列表，1小时缓存）和 `PUT /api/v1/admin/ai/plugins/{pluginId}/model`（更新插件模型）
+- `AdminPluginController.java` — list 接口返回 `ai_model` 字段
+- `PluginInvokeController.java` — 从 plugin 获取 `aiModel` 传递给 AI Service
+- `AiScriptService/AiImageService/AiTranslateService` — 接口新增 `modelOverride` 参数
+- 三个真实模式 ServiceImpl — 始终先解析 DB provider config 获取 apiKey/endpoint，再用 modelOverride 覆盖 model
+- 三个 Mock 模式 ServiceImplV2 — 接口签名同步更新
+- `application-docker.yml` — 新增 `plugin.default.ai-model: deepseek-v3`
+
+**前端新增/修改**：
+- `api/plugin.ts` — 新增 `AiModelItem` 类型、`getAiModels()`、`updatePluginModel()` API
+- `ModelConfigDialog.vue` — 新增模型配置弹窗（el-select 下拉选择）
+- `AdminPluginsPage.vue` — 新增「AI 模型」列和「模型配置」按钮
+
+**模型选择优先级**：插件绑定模型 (`plugin.ai_model`) > DB provider 配置 (`system_config.model_name`) > YAML 默认值

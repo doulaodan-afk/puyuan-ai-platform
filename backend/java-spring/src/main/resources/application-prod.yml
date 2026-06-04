@@ -48,6 +48,25 @@ management:
       exposure:
         include: health,info
 
+# ============================================================
+# 限流配置（生产环境 - 租户分级）
+# ============================================================
+rate-limit:
+  enabled: true
+  tenant:
+    default-rpm: ${TENANT_DEFAULT_RPM:10}
+    premium-rpm: ${TENANT_PREMIUM_RPM:100}
+    burst-multiplier: ${TENANT_BURST_MULTIPLIER:2.0}
+
+# ============================================================
+# AI 多 Key 轮询配置
+# ============================================================
+ai:
+  multi-key:
+    enabled: ${AI_MULTI_KEY_ENABLED:true}
+    key-cooldown-seconds: ${AI_KEY_COOLDOWN_SECONDS:60}
+    max-retry-attempts: ${AI_MAX_RETRY_ATTEMPTS:3}
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true

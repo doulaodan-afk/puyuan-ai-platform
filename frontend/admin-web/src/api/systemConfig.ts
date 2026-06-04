@@ -62,6 +62,25 @@ export interface TestConfigResponse {
 }
 
 /**
+ * 全局 AI 提供商配置
+ */
+export interface AiProviderGlobalConfig {
+  base_url: string;
+  api_key: string; // 脱敏后的
+  default_model: string;
+  has_api_key: string; // "true" | "false"
+}
+
+/**
+ * 保存 AI 提供商配置请求
+ */
+export interface SaveAiProviderConfigRequest {
+  base_url?: string;
+  api_key?: string; // 明文
+  default_model?: string;
+}
+
+/**
  * 获取所有配置分组
  */
 export async function getConfigGroups(): Promise<ConfigGroup[]> {
@@ -126,6 +145,24 @@ export async function deleteConfig(id: number): Promise<Record<string, unknown>>
 export async function testConfig(request: TestConfigRequest): Promise<TestConfigResponse> {
   return adminRequest<TestConfigResponse>("/api/v1/admin/system-config/test", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+/**
+ * 获取全局 AI 提供商配置（脱敏）
+ */
+export async function getAiProviderConfig(): Promise<AiProviderGlobalConfig> {
+  return adminRequest<AiProviderGlobalConfig>("/api/v1/admin/system-config/ai-provider");
+}
+
+/**
+ * 保存全局 AI 提供商配置
+ */
+export async function saveAiProviderConfig(request: SaveAiProviderConfigRequest): Promise<Record<string, unknown>> {
+  return adminRequest<Record<string, unknown>>("/api/v1/admin/system-config/config/ai", {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });

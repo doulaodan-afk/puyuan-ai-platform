@@ -12,8 +12,8 @@ public final class ApiModels {
     private ApiModels() {}
 
     public record LoginRequest(
-            @NotBlank String mobile,
-            @NotBlank String verifyCode
+            @NotBlank @JsonProperty("mobile") String mobile,
+            @NotBlank @JsonProperty("verify_code") String verifyCode
     ) {}
 
     public record WxLoginRequest(
@@ -59,20 +59,20 @@ public final class ApiModels {
     }
 
     public record LoginResponse(
-            String accessToken,
-            long expiresIn,
-            long userId,
-            long tenantId,
-            String roleCode
+            @JsonProperty("access_token") String accessToken,
+            @JsonProperty("expires_in") long expiresIn,
+            @JsonProperty("user_id") long userId,
+            @JsonProperty("tenant_id") long tenantId,
+            @JsonProperty("role_code") String roleCode
     ) {}
 
     public record ProfileResponse(
-            long tenantId,
-            String tenantCode,
-            String tenantName,
-            int tenantStatus,
-            long userId,
-            String roleCode
+            @JsonProperty("tenant_id") long tenantId,
+            @JsonProperty("tenant_code") String tenantCode,
+            @JsonProperty("tenant_name") String tenantName,
+            @JsonProperty("tenant_status") int tenantStatus,
+            @JsonProperty("user_id") long userId,
+            @JsonProperty("role_code") String roleCode
     ) {}
 
     public record BalanceResponse(
@@ -187,6 +187,15 @@ public final class ApiModels {
             String frontendEntry,
             String billingType,
             Integer status
+    ) {}
+
+    public record UpdatePluginModelRequest(
+            @JsonProperty("ai_model") String aiModel
+    ) {}
+
+    public record AiModelItem(
+            String id,
+            @JsonProperty("owned_by") String ownedBy
     ) {}
 
     public record PublishPluginRequest(

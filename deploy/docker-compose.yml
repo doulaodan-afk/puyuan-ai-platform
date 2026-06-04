@@ -117,6 +117,7 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/logs:/var/log/nginx
       - ./frontend/admin-web/dist:/usr/share/nginx/html/admin:ro
+      - ./frontend/merchant-web/dist:/usr/share/nginx/html/merchant:ro
     networks:
       - puyuan-network
     command: >

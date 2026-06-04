@@ -47,7 +47,16 @@ export async function adminRequest<T>(url: string, init?: RequestInit): Promise<
 
   const response = await fetch(fullUrl, merged);
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+    // 尝试解析响应体中的错误消息
+    try {
+      const errorPayload = await response.json() as ApiEnvelope<unknown>;
+      throw new Error(errorPayload.message || `HTTP ${response.status}`);
+    } catch (parseError) {
+      if (parseError instanceof Error && parseError.message !== `HTTP ${response.status}`) {
+        throw parseError;
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
   }
 
   const payload = (await response.json()) as ApiEnvelope<T>;
