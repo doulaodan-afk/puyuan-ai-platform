@@ -155,6 +155,37 @@ VALUES
   ('oss', 'priority', '1', 1, 1, 'Config priority')
 ON DUPLICATE KEY UPDATE config_value = VALUES(config_value);
 
+-- AI 提供商（需在前端管理页面填入真实 API Key）
+INSERT INTO ai_provider (name, display_name, base_url, api_key, enabled, priority, description)
+VALUES
+  ('qiniu', '七牛云', 'https://api.qnaigc.com/v1', '', 1, 1, '七牛云 AI 平台，提供多种开源模型'),
+  ('DeepSeek', 'DeepSeek', 'https://api.deepseek.com', '', 1, 2, 'DeepSeek 官方 API'),
+  ('OpenRouter', 'OpenRouter', 'https://openrouter.ai/api/v1', '', 1, 3, 'OpenRouter 多模型聚合平台')
+ON DUPLICATE KEY UPDATE display_name=VALUES(display_name), base_url=VALUES(base_url), priority=VALUES(priority);
+
+-- AI 场景定义
+INSERT INTO ai_scene (scene_code, scene_name, api_type, scene_description)
+VALUES
+  ('chat', '对话', 'chat_completion', '通用对话场景，适用于问答、闲聊、内容生成等'),
+  ('summarize', '摘要', 'chat_completion', '文本摘要场景，适用于长文本提炼、关键信息提取等'),
+  ('image_gen', '图片生成', 'image_generation', 'AI图片生成场景，适用于商品图、海报、插画等'),
+  ('image_understand', '图片理解', 'image_understanding', '图片理解场景，适用于图片描述、OCR、物体识别等'),
+  ('video_understand', '视频理解', 'video_understanding', '视频理解场景，适用于视频内容分析、关键帧提取等'),
+  ('speech_to_text', '语音转文字', 'speech_to_text', '语音转文字场景，适用于语音识别、字幕生成等')
+ON DUPLICATE KEY UPDATE scene_name=VALUES(scene_name), api_type=VALUES(api_type), scene_description=VALUES(scene_description);
+
+-- 场景-模型绑定（DeepSeek provider_id=2 为主模型，qiniu provider_id=1 为备用）
+INSERT INTO ai_scene_model (scene_id, provider_id, model_id, is_primary, is_fallback, priority)
+VALUES
+  ((SELECT id FROM ai_scene WHERE scene_code='chat'), 2, 'deepseek-chat', 1, 0, 0),
+  ((SELECT id FROM ai_scene WHERE scene_code='chat'), 1, 'Qwen/Qwen2.5-72B-Instruct', 0, 1, 1),
+  ((SELECT id FROM ai_scene WHERE scene_code='summarize'), 2, 'deepseek-chat', 1, 0, 0),
+  ((SELECT id FROM ai_scene WHERE scene_code='summarize'), 1, 'Qwen/Qwen2.5-72B-Instruct', 0, 1, 1),
+  ((SELECT id FROM ai_scene WHERE scene_code='image_gen'), 1, 'stable-diffusion-3-5-large', 1, 0, 0),
+  ((SELECT id FROM ai_scene WHERE scene_code='image_understand'), 1, 'Qwen/Qwen2.5-VL-72B-Instruct', 1, 0, 0),
+  ((SELECT id FROM ai_scene WHERE scene_code='video_understand'), 1, 'Qwen/Qwen2.5-VL-72B-Instruct', 1, 0, 0),
+  ((SELECT id FROM ai_scene WHERE scene_code='speech_to_text'), 1, 'SenseVoiceSmall', 1, 0, 0);
+
 -- 插件配置
 INSERT INTO plugin_config (plugin_code, config_key, config_value, description)
 VALUES
