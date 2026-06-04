@@ -43,11 +43,9 @@ services:
       timeout: 5s
       retries: 5
 
-  # 后端服务
+  # 后端服务 — 使用预构建镜像 + volume 挂载 jar，避免每次部署重新 build Docker 镜像
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+    image: puyuan-ai-platform-backend:latest
     container_name: puyuan-backend
     restart: always
     depends_on:
@@ -56,12 +54,13 @@ services:
       redis:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       RATE_LIMIT_ENABLED: "true"
       CONTENT_SECURITY_ENABLED: ${CONTENT_SECURITY_ENABLED}
       WX_MINIAPP_APPID: ${WX_MINIAPP_APPID}
@@ -91,6 +90,7 @@ services:
       QINIU_CDN_DOMAIN: ${QINIU_CDN_DOMAIN:-}
       APP_STORAGE_MOCK_ENABLED: ${APP_STORAGE_MOCK_ENABLED:-false}
     volumes:
+      - ./platform-api-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
       - ./config:/app/config:ro
     ports:
       - "8080:8080"

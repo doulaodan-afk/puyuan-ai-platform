@@ -1,36 +1,29 @@
 # 濮院毛衫 AI 平台 - 后端运行时 Dockerfile
-# jar 在宿主机上预构建，此镜像仅负责运行
+# 策略: 仅构建一次基础镜像，后续更新通过 volume 挂载 jar 实现
+# 使用: docker build -t puyuan-ai-platform-backend:latest .
+# 然后 docker-compose.yml 用 image: + volume mount jar
 FROM eclipse-temurin:21-jdk-alpine
 
 LABEL maintainer="puyuan-maoshan <contact@puyuanmaoshan.com>"
 
-# 安装必要工具（curl 用于健康检查）
 RUN apk add --no-cache curl
 
-# 创建应用用户
 RUN addgroup -S appuser && adduser -S -G appuser appuser
 
-# 设置工作目录
 WORKDIR /app
 
-# 复制构建好的 jar 文件
-COPY backend/java-spring/target/platform-api-0.0.1-SNAPSHOT.jar ./app.jar
+# 占位 jar — 实际 jar 通过 volume mount 范围覆盖
+COPY placeholder.jar ./app.jar
 
-# 更改所有者
 RUN chown -R appuser:appuser /app
 
-# 切换到应用用户
 USER appuser
 
-# 暴露端口
 EXPOSE 8080
 
-# 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-# 启动应用
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=docker"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
-# JVM 优化参数
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
