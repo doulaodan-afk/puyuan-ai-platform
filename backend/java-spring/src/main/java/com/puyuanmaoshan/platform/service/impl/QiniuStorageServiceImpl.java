@@ -1,6 +1,7 @@
 package com.puyuanmaoshan.platform.service.impl;
 
 import com.puyuanmaoshan.platform.service.StorageService;
+import com.puyuanmaoshan.platform.service.SystemConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -8,11 +9,13 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -20,16 +23,42 @@ import java.util.Base64;
 public class QiniuStorageServiceImpl implements StorageService {
 
     @Value("${app.storage.qiniu.access-key:}")
-    private String accessKey;
+    private String defaultAccessKey;
 
     @Value("${app.storage.qiniu.secret-key:}")
-    private String secretKey;
+    private String defaultSecretKey;
 
     @Value("${app.storage.qiniu.bucket:puyuanmaoshan}")
-    private String bucket;
+    private String defaultBucket;
 
     @Value("${app.storage.qiniu.cdn-domain:www-cdn.puyuanmaoshan.com}")
-    private String cdnDomain;
+    private String defaultCdnDomain;
+
+    private final SystemConfigService systemConfigService;
+
+    public QiniuStorageServiceImpl(SystemConfigService systemConfigService) {
+        this.systemConfigService = systemConfigService;
+    }
+
+    private String resolveAccessKey() {
+        String dbVal = systemConfigService.getConfigValue("oss", "access_key");
+        return (dbVal != null && !dbVal.isEmpty()) ? dbVal : defaultAccessKey;
+    }
+
+    private String resolveSecretKey() {
+        String dbVal = systemConfigService.getConfigValue("oss", "secret_key");
+        return (dbVal != null && !dbVal.isEmpty()) ? dbVal : defaultSecretKey;
+    }
+
+    private String resolveBucket() {
+        String dbVal = systemConfigService.getConfigValue("oss", "bucket");
+        return (dbVal != null && !dbVal.isEmpty()) ? dbVal : defaultBucket;
+    }
+
+    private String resolveCdnDomain() {
+        String dbVal = systemConfigService.getConfigValue("oss", "cdn_domain");
+        return (dbVal != null && !dbVal.isEmpty()) ? dbVal : defaultCdnDomain;
+    }
 
     @Override
     public String uploadFile(String objectKey, InputStream inputStream, long contentLength) {
@@ -38,31 +67,58 @@ public class QiniuStorageServiceImpl implements StorageService {
 
     @Override
     public String uploadFile(String objectKey, InputStream inputStream, long contentLength, String contentType) {
+        String accessKey = resolveAccessKey();
+        String secretKey = resolveSecretKey();
+        String bucket = resolveBucket();
+        String cdnDomain = resolveCdnDomain();
+
         try {
-            String uploadToken = generateUploadToken();
-            String encodedKey = URLEncoder.encode(objectKey, StandardCharsets.UTF_8);
-
+            String uploadToken = generateUploadToken(accessKey, secretKey, bucket);
             byte[] bytes = inputStream.readAllBytes();
+            String boundary = "----QiniuBoundary" + UUID.randomUUID().toString().replace("-", "");
 
-            java.net.URL url = new java.net.URL("https://up.qiniup.com/upload/" + encodedKey);
+            String fileName = objectKey;
+            int lastSlash = objectKey.lastIndexOf('/');
+            if (lastSlash >= 0) {
+                fileName = objectKey.substring(lastSlash + 1);
+            }
+
+            ByteArrayOutputStream body = new ByteArrayOutputStream();
+            body.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+            body.write("Content-Disposition: form-data; name=\"token\"\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+            body.write(uploadToken.getBytes(StandardCharsets.UTF_8));
+            body.write("\r\n".getBytes(StandardCharsets.UTF_8));
+            body.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+            body.write("Content-Disposition: form-data; name=\"key\"\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+            body.write(objectKey.getBytes(StandardCharsets.UTF_8));
+            body.write("\r\n".getBytes(StandardCharsets.UTF_8));
+            body.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+            body.write(("Content-Disposition: form-data; name=\"file\"; filename=\"" + fileName + "\"\r\n").getBytes(StandardCharsets.UTF_8));
+            body.write("Content-Type: application/octet-stream\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+            body.write(bytes);
+            body.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+
+            java.net.URL url = new java.net.URL("https://up.qiniup.com/");
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authorization", "UpToken " + uploadToken);
-            conn.setRequestProperty("Content-Type", contentType);
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-            conn.getOutputStream().write(bytes);
+            conn.getOutputStream().write(body.toByteArray());
             conn.getOutputStream().flush();
 
             int responseCode = conn.getResponseCode();
             if (responseCode != 200) {
-                String errorMsg = new String(conn.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+                java.io.InputStream errStream = conn.getErrorStream();
+                String errorMsg = errStream != null
+                        ? new String(errStream.readAllBytes(), StandardCharsets.UTF_8)
+                        : "HTTP " + responseCode;
                 log.error("Qiniu upload failed: code={}, error={}", responseCode, errorMsg);
                 throw new RuntimeException("七牛云上传失败: " + errorMsg);
             }
 
             log.info("Qiniu upload success: key={}", objectKey);
-            return getPublicUrl(objectKey);
+            return getPublicUrl(objectKey, cdnDomain);
         } catch (Exception e) {
             log.error("Qiniu upload error: key={}, error={}", objectKey, e.getMessage(), e);
             throw new RuntimeException("七牛云上传失败: " + e.getMessage(), e);
@@ -84,6 +140,10 @@ public class QiniuStorageServiceImpl implements StorageService {
 
     @Override
     public void deleteFile(String objectKey) {
+        String accessKey = resolveAccessKey();
+        String secretKey = resolveSecretKey();
+        String bucket = resolveBucket();
+
         try {
             String encodedEntry = Base64.getEncoder().encodeToString(
                     (bucket + ":" + objectKey).getBytes(StandardCharsets.UTF_8));
@@ -108,6 +168,10 @@ public class QiniuStorageServiceImpl implements StorageService {
 
     @Override
     public String getSignedUrl(String objectKey, int expiresIn) {
+        String accessKey = resolveAccessKey();
+        String secretKey = resolveSecretKey();
+        String cdnDomain = resolveCdnDomain();
+
         long deadline = System.currentTimeMillis() / 1000 + expiresIn;
         String encodedKey = URLEncoder.encode(objectKey, StandardCharsets.UTF_8);
         String sign = hmacSha1(secretKey, encodedKey + ":" + deadline);
@@ -117,11 +181,19 @@ public class QiniuStorageServiceImpl implements StorageService {
 
     @Override
     public String getPublicUrl(String objectKey) {
+        return getPublicUrl(objectKey, resolveCdnDomain());
+    }
+
+    private String getPublicUrl(String objectKey, String cdnDomain) {
         return "https://" + cdnDomain + "/" + objectKey;
     }
 
     @Override
     public boolean fileExists(String objectKey) {
+        String accessKey = resolveAccessKey();
+        String secretKey = resolveSecretKey();
+        String bucket = resolveBucket();
+
         try {
             String encodedEntry = Base64.getEncoder().encodeToString(
                     (bucket + ":" + objectKey).getBytes(StandardCharsets.UTF_8));
@@ -147,7 +219,7 @@ public class QiniuStorageServiceImpl implements StorageService {
     @Override
     public boolean testConnection() {
         try {
-            String uploadToken = generateUploadToken();
+            String uploadToken = generateUploadToken(resolveAccessKey(), resolveSecretKey(), resolveBucket());
             return uploadToken != null && !uploadToken.isEmpty();
         } catch (Exception e) {
             log.error("Qiniu connection test failed: {}", e.getMessage());
@@ -155,7 +227,7 @@ public class QiniuStorageServiceImpl implements StorageService {
         }
     }
 
-    private String generateUploadToken() {
+    private String generateUploadToken(String accessKey, String secretKey, String bucket) {
         long deadline = System.currentTimeMillis() / 1000 + 3600;
         String putPolicy = "{\"scope\":\"" + bucket + "\",\"deadline\":" + deadline + "}";
         String encodedPutPolicy = Base64.getEncoder().encodeToString(

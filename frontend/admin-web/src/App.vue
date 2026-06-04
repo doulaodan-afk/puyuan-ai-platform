@@ -26,6 +26,7 @@
           </Transition>
         </div>
         <RouterLink to="/admin/system-config">对象存储</RouterLink>
+        <RouterLink to="/admin/oss-statistics">存储统计</RouterLink>
       </nav>
       <div class="actions">
         <ThemeToggle class="theme-toggle" />
@@ -96,6 +97,10 @@
               <el-icon><Setting /></el-icon>
               <span>对象存储</span>
             </RouterLink>
+            <RouterLink to="/admin/oss-statistics" @click="mobileMenuOpen = false">
+              <el-icon><DataAnalysis /></el-icon>
+              <span>存储统计</span>
+            </RouterLink>
           </div>
           <div class="mobile-nav-footer">
             <button class="logout-btn" @click="handleLogout">
@@ -116,7 +121,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Menu, Close, SwitchButton, DataLine, OfficeBuilding, Grid, Tickets, Document, Goods, List, Setting, Cpu, ArrowDown } from '@element-plus/icons-vue'
+import { Menu, Close, SwitchButton, DataLine, OfficeBuilding, Grid, Tickets, Document, Goods, List, Setting, Cpu, ArrowDown, DataAnalysis } from '@element-plus/icons-vue'
 import ThemeToggle from "./components/ThemeToggle.vue";
 import { useAdminAuthStore } from "./stores/adminAuth";
 

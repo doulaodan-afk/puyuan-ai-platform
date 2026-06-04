@@ -6,6 +6,8 @@ import com.puyuanmaoshan.platform.dto.ApiResponse;
 import com.puyuanmaoshan.platform.entity.AccountWallet;
 import com.puyuanmaoshan.platform.entity.BillingLedger;
 import com.puyuanmaoshan.platform.entity.RechargeOrder;
+import com.puyuanmaoshan.platform.dto.OssStatisticDtos;
+import com.puyuanmaoshan.platform.service.OssStatisticsService;
 import com.puyuanmaoshan.platform.service.AccountWalletService;
 import com.puyuanmaoshan.platform.service.BillingLedgerService;
 import com.puyuanmaoshan.platform.service.RechargeOrderService;
@@ -33,15 +35,18 @@ public class AccountController {
     private final BillingLedgerService billingLedgerService;
     private final RechargeOrderService rechargeOrderService;
     private final RechargeOrderWorkflowService rechargeOrderWorkflowService;
+    private final OssStatisticsService ossStatisticsService;
 
     public AccountController(AccountWalletService accountWalletService,
                              BillingLedgerService billingLedgerService,
                              RechargeOrderService rechargeOrderService,
-                             RechargeOrderWorkflowService rechargeOrderWorkflowService) {
+                             RechargeOrderWorkflowService rechargeOrderWorkflowService,
+                             OssStatisticsService ossStatisticsService) {
         this.accountWalletService = accountWalletService;
         this.billingLedgerService = billingLedgerService;
         this.rechargeOrderService = rechargeOrderService;
         this.rechargeOrderWorkflowService = rechargeOrderWorkflowService;
+        this.ossStatisticsService = ossStatisticsService;
     }
 
     @GetMapping("/balance")
@@ -158,5 +163,18 @@ public class AccountController {
                 resolvedRequestId
         );
         return ApiResponse.ok(data, resolvedRequestId);
+    }
+
+    /**
+     * 获取存储概览（商家端）
+     * 基于七牛云 Kodo 统计接口
+     */
+    @GetMapping("/storage-overview")
+    public ApiResponse<OssStatisticDtos.StorageOverviewResponse> storageOverview(
+            @RequestParam(name = "begin", required = false) String begin,
+            @RequestParam(name = "end", required = false) String end,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
+        OssStatisticDtos.StorageOverviewResponse data = ossStatisticsService.getStorageOverview(begin, end);
+        return ApiResponse.ok(data, RequestContextUtil.resolveRequestId(requestId, "req-storage-overview"));
     }
 }

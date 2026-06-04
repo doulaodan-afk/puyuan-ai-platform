@@ -31,11 +31,10 @@ export interface AiProviderConfig {
 
 export interface OssConfig {
   provider_name: string;
-  access_key_id: string;
-  access_key_secret: string;
-  endpoint: string;
-  bucket_name: string;
-  region: string;
+  access_key: string;
+  secret_key: string;
+  bucket: string;
+  cdn_domain: string;
   priority: number;
   enabled: boolean;
   config_id: number | null;
@@ -124,6 +123,17 @@ export async function saveConfig(request: SaveConfigRequest): Promise<SystemConf
  */
 export async function saveAiConfig(request: Record<string, unknown>): Promise<Record<string, unknown>> {
   return adminRequest<Record<string, unknown>>("/api/v1/admin/system-config/ai/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+/**
+ * 保存 OSS 配置（七牛云）
+ */
+export async function saveOssConfig(request: Record<string, unknown>): Promise<Record<string, unknown>> {
+  return adminRequest<Record<string, unknown>>("/api/v1/admin/system-config/oss/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),

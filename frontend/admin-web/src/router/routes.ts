@@ -114,6 +114,36 @@ export const adminRoutes: RouteRecordRaw[] = [
     },
   },
   {
+    path: "/admin/oss-statistics",
+    name: "AdminOssStatistics",
+    component: () => import("../pages/AdminOssStatisticsPage.vue"),
+    meta: {
+      title: "存储统计",
+      requiresAuth: true,
+      roles: ["platform_super_admin", "platform_ops", "platform_finance"],
+    },
+  },
+  {
+    path: "/admin/oss-statistics",
+    name: "AdminOssStatistics",
+    component: () => import("../pages/AdminOssStatisticsPage.vue"),
+    meta: {
+      title: "存储统计",
+      requiresAuth: true,
+      roles: ["platform_super_admin", "platform_ops"],
+    },
+  },
+  {
+    path: "/admin/oss-statistics",
+    name: "AdminOssStatistics",
+    component: () => import("../pages/AdminOssStatisticsPage.vue"),
+    meta: {
+      title: "存储统计",
+      requiresAuth: true,
+      roles: ["platform_super_admin", "platform_ops"],
+    },
+  },
+  {
     path: "/admin/system-config",
     name: "AdminSystemConfig",
     component: () => import("../pages/AdminSystemConfigPage.vue"),

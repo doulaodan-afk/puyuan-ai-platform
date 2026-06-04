@@ -146,12 +146,11 @@ VALUES
   ('ai_translate', 'endpoint', 'https://api.openai.com/v1/chat/completions', 1, 1, 'AI translate API endpoint'),
   ('ai_translate', 'api_key', 'ENCRYPTED:sk-mock-key-for-demo', 1, 1, 'OpenAI API Key (demo)'),
   ('ai_translate', 'priority', '1', 1, 1, 'Config priority'),
-  ('oss', 'provider_name', 'Aliyun', 1, 1, 'OSS provider name'),
-  ('oss', 'access_key_id', 'ENCRYPTED:mock-access-key-id', 1, 1, 'OSS Access Key ID'),
-  ('oss', 'access_key_secret', 'ENCRYPTED:mock-access-key-secret', 1, 1, 'OSS Access Key Secret'),
-  ('oss', 'endpoint', 'oss-cn-hangzhou.aliyuncs.com', 1, 1, 'OSS endpoint'),
-  ('oss', 'bucket_name', 'puyuan-maoshan', 1, 1, 'OSS Bucket name'),
-  ('oss', 'region', 'cn-hangzhou', 1, 1, 'OSS region'),
+  ('oss', 'provider_name', 'Qiniu', 1, 1, 'OSS provider name'),
+  ('oss', 'access_key', 'IAM-lShj3U7UOuMJ1xGvJZRLg8wQ9Cp-gaZ8UdwTSnsk', 1, 1, 'Qiniu Access Key'),
+  ('oss', 'secret_key', 'eNPr64t9WbTkum6ujM-oZHct3GLzAVKPFBL4oQCSa0bT', 1, 1, 'Qiniu Secret Key'),
+  ('oss', 'bucket', 'puyuanmaoshan', 1, 1, 'Qiniu Bucket name'),
+  ('oss', 'cdn_domain', 'www-cdn.puyuanmaoshan.com', 1, 1, 'Qiniu CDN domain'),
   ('oss', 'priority', '1', 1, 1, 'Config priority')
 ON DUPLICATE KEY UPDATE config_value = VALUES(config_value);
 

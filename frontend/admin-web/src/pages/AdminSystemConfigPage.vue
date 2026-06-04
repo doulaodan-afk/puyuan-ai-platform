@@ -20,28 +20,27 @@
 
     <!-- 对象存储 (OSS) 配置 -->
     <section v-if="activeTab === 'oss'" class="panel">
-      <h2>对象存储 (OSS) 配置</h2>
+      <h2>对象存储 (OSS) 配置 — 七牛云</h2>
 
       <!-- 添加/编辑表单 -->
       <div v-if="showForm" class="form-panel">
         <h3>{{ editingId ? '编辑配置' : '添加配置' }}</h3>
         <form class="form-grid" @submit.prevent="saveOssConfig">
-          <input v-model.trim="ossForm.providerName" placeholder="提供商名称 (如 Aliyun)" required />
+          <input v-model.trim="ossForm.providerName" placeholder="提供商名称 (如 Qiniu)" required />
           <input
-            v-model.trim="ossForm.accessKeyId"
+            v-model.trim="ossForm.accessKey"
             type="password"
-            placeholder="Access Key ID"
+            placeholder="Access Key"
             required
           />
           <input
-            v-model.trim="ossForm.accessKeySecret"
+            v-model.trim="ossForm.secretKey"
             type="password"
-            placeholder="Access Key Secret"
+            placeholder="Secret Key"
             required
           />
-          <input v-model.trim="ossForm.endpoint" placeholder="端点 (如 oss-cn-hangzhou.aliyuncs.com)" required />
-          <input v-model.trim="ossForm.bucketName" placeholder="Bucket 名称" required />
-          <input v-model.trim="ossForm.region" placeholder="区域 (如 cn-hangzhou)" required />
+          <input v-model.trim="ossForm.bucket" placeholder="Bucket 名称 (如 puyuanmaoshan)" required />
+          <input v-model.trim="ossForm.cdnDomain" placeholder="CDN 域名 (如 www-cdn.puyuanmaoshan.com)" required />
           <input v-model.number="ossForm.priority" type="number" placeholder="优先级 (1-10)" min="1" max="10" />
           <label class="checkbox">
             <input v-model="ossForm.enabled" type="checkbox" />
@@ -61,10 +60,10 @@
           <thead>
             <tr>
               <th>提供商</th>
-              <th>Access Key ID</th>
-              <th>端点</th>
+              <th>Access Key</th>
+              <th>Secret Key</th>
               <th>Bucket</th>
-              <th>区域</th>
+              <th>CDN 域名</th>
               <th>优先级</th>
               <th>状态</th>
               <th>操作</th>
@@ -73,10 +72,10 @@
           <tbody>
             <tr v-for="(config, index) in ossConfigs" :key="index">
               <td>{{ config.provider_name }}</td>
-              <td class="masked">{{ config.access_key_id }}</td>
-              <td>{{ config.endpoint }}</td>
-              <td>{{ config.bucket_name }}</td>
-              <td>{{ config.region }}</td>
+              <td class="masked">{{ config.access_key }}</td>
+              <td class="masked">{{ config.secret_key }}</td>
+              <td>{{ config.bucket }}</td>
+              <td>{{ config.cdn_domain }}</td>
               <td>{{ config.priority }}</td>
               <td>
                 <span :class="config.enabled ? 'status-online' : 'status-offline'">
@@ -84,9 +83,9 @@
                 </span>
               </td>
               <td class="actions">
-                <button @click="editConfig(config, 'oss')">编辑</button>
-                <button @click="testConfig(config, 'oss')">测试</button>
-                <button @click="deleteConfig(config, 'oss')">删除</button>
+                <button @click="editConfig(config)">编辑</button>
+                <button @click="testConfig(config)">测试</button>
+                <button @click="deleteConfig(config)">删除</button>
               </td>
             </tr>
           </tbody>
@@ -112,13 +111,11 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
 import {
-  type AiProviderConfig,
   type OssConfig,
   type TestConfigResponse,
   deleteConfig as deleteConfigApi,
-  getAiConfigs,
   getOssConfigs,
-  saveAiConfig,
+  saveOssConfig as saveOssConfigApi,
   testConfig as testConfigApi,
 } from "../api/systemConfig";
 
@@ -141,11 +138,10 @@ const ossConfigs = ref<OssConfig[]>([]);
 
 const ossForm = reactive({
   providerName: "",
-  accessKeyId: "",
-  accessKeySecret: "",
-  endpoint: "",
-  bucketName: "",
-  region: "",
+  accessKey: "",
+  secretKey: "",
+  bucket: "",
+  cdnDomain: "",
   priority: 1,
   enabled: true,
 });
@@ -177,42 +173,35 @@ function showAddForm() {
 
 function resetForms() {
   ossForm.providerName = "";
-  ossForm.accessKeyId = "";
-  ossForm.accessKeySecret = "";
-  ossForm.endpoint = "";
-  ossForm.bucketName = "";
-  ossForm.region = "";
+  ossForm.accessKey = "";
+  ossForm.secretKey = "";
+  ossForm.bucket = "";
+  ossForm.cdnDomain = "";
   ossForm.priority = 1;
   ossForm.enabled = true;
 }
 
-function editConfig(config: AiProviderConfig | OssConfig, type: string) {
+function editConfig(config: OssConfig) {
   showForm.value = true;
   editingId.value = config.config_id ?? null;
 
-  if (type === "oss") {
-    const c = config as OssConfig;
-    ossForm.providerName = c.provider_name;
-    ossForm.accessKeyId = c.access_key_id;
-    ossForm.accessKeySecret = c.access_key_secret;
-    ossForm.endpoint = c.endpoint;
-    ossForm.bucketName = c.bucket_name;
-    ossForm.region = c.region;
-    ossForm.priority = c.priority;
-    ossForm.enabled = c.enabled;
-  }
+  ossForm.providerName = config.provider_name;
+  ossForm.accessKey = config.access_key;
+  ossForm.secretKey = config.secret_key;
+  ossForm.bucket = config.bucket;
+  ossForm.cdnDomain = config.cdn_domain;
+  ossForm.priority = config.priority;
+  ossForm.enabled = config.enabled;
 }
 
 async function saveOssConfig() {
   try {
-    await saveAiConfig({
-      group: "oss",
+    await saveOssConfigApi({
       provider_name: ossForm.providerName,
-      access_key_id: ossForm.accessKeyId,
-      access_key_secret: ossForm.accessKeySecret,
-      endpoint: ossForm.endpoint,
-      bucket_name: ossForm.bucketName,
-      region: ossForm.region,
+      access_key: ossForm.accessKey,
+      secret_key: ossForm.secretKey,
+      bucket: ossForm.bucket,
+      cdn_domain: ossForm.cdnDomain,
       priority: ossForm.priority,
       enabled: ossForm.enabled,
     });
@@ -224,7 +213,7 @@ async function saveOssConfig() {
   }
 }
 
-async function deleteConfig(config: AiProviderConfig | OssConfig, type: string) {
+async function deleteConfig(config: OssConfig) {
   if (!confirm("确定要删除此配置吗？")) {
     return;
   }
@@ -242,7 +231,7 @@ async function deleteConfig(config: AiProviderConfig | OssConfig, type: string) 
   }
 }
 
-async function testConfig(config: AiProviderConfig | OssConfig, type: string) {
+async function testConfig(config: OssConfig) {
   if (config.config_id === null) {
     testResult.value = {
       success: false,
@@ -450,39 +439,6 @@ onMounted(() => {
     padding: 12px 16px;
     font-size: 15px;
   }
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.form-field label {
-  font-size: 13px;
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
-}
-
-.form-field input {
-  padding: 10px 14px;
-  border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 4px);
-  font-size: 14px;
-  color: hsl(var(--foreground));
-  background: hsl(var(--background));
-}
-
-.hint {
-  font-size: 13px;
-  color: hsl(var(--muted-foreground));
-  margin-bottom: 16px;
-}
-
-.hint-inline {
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  margin-top: 2px;
 }
 
 .checkbox {

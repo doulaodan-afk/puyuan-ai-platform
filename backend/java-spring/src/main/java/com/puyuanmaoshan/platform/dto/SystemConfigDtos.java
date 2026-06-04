@@ -79,7 +79,7 @@ public class SystemConfigDtos {
     }
 
     /**
-     * OSS 配置
+     * OSS 配置（七牛云）
      */
     @Data
     @Builder
@@ -87,11 +87,10 @@ public class SystemConfigDtos {
     @AllArgsConstructor
     public static class OssConfig {
         private String providerName;
-        private String accessKeyId; // 脱敏
-        private String accessKeySecret; // 脱敏
-        private String endpoint;
-        private String bucketName;
-        private String region;
+        private String accessKey; // 脱敏
+        private String secretKey; // 脱敏
+        private String bucket;
+        private String cdnDomain;
         private Integer priority;
         private Boolean enabled;
         private Long configId;

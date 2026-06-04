@@ -99,7 +99,7 @@ public class AdminSystemConfigController {
     }
 
     /**
-     * 获取 OSS 配置列表（按提供商分组）
+     * 获取 OSS 配置列表（七牛云）
      */
     @GetMapping("/oss")
     public ApiResponse<List<OssConfig>> getOssConfigs(
@@ -107,15 +107,14 @@ public class AdminSystemConfigController {
         List<Map<String, String>> providers = systemConfigService.getProviderConfigs("oss");
         List<OssConfig> configs = providers.stream()
                 .map(p -> {
-                    String accessKeyId = p.get("access_key_id");
-                    String accessKeySecret = p.get("access_key_secret");
+                    String accessKey = p.get("access_key");
+                    String secretKey = p.get("secret_key");
                     return OssConfig.builder()
                             .providerName(p.get("provider_name"))
-                            .accessKeyId(accessKeyId != null ? CryptoUtil.maskKey(accessKeyId, 4, 4) : null)
-                            .accessKeySecret(accessKeySecret != null ? CryptoUtil.maskKey(accessKeySecret, 4, 4) : null)
-                            .endpoint(p.get("endpoint"))
-                            .bucketName(p.get("bucket_name"))
-                            .region(p.get("region"))
+                            .accessKey(accessKey != null ? CryptoUtil.maskKey(accessKey, 4, 4) : null)
+                            .secretKey(secretKey != null ? CryptoUtil.maskKey(secretKey, 4, 4) : null)
+                            .bucket(p.get("bucket"))
+                            .cdnDomain(p.get("cdn_domain"))
                             .priority(p.get("priority") != null ? Integer.parseInt(p.get("priority")) : 1)
                             .enabled(p.get("enabled") != null ? Boolean.parseBoolean(p.get("enabled")) : true)
                             .configId(p.get("config_id") != null ? Long.parseLong(p.get("config_id")) : null)
@@ -206,6 +205,45 @@ public class AdminSystemConfigController {
         Map<String, Object> data = new HashMap<>();
         data.put("status", "saved");
         return ApiResponse.ok(data, RequestContextUtil.resolveRequestId(requestId, "req-admin-config-ai-save"));
+    }
+
+    /**
+     * 批量保存 OSS 配置（七牛云）
+     */
+    @PostMapping("/oss/save")
+    public ApiResponse<Map<String, Object>> saveOssConfig(
+            @RequestBody Map<String, Object> request,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
+        String providerName = (String) request.get("provider_name");
+        String accessKey = (String) request.get("access_key");
+        String secretKey = (String) request.get("secret_key");
+        String bucket = (String) request.get("bucket");
+        String cdnDomain = (String) request.get("cdn_domain");
+        Integer priority = request.get("priority") != null ? ((Number) request.get("priority")).intValue() : 1;
+        Boolean enabled = request.get("enabled") != null ? (Boolean) request.get("enabled") : true;
+
+        systemConfigService.saveOrUpdateConfig(SaveConfigRequest.builder()
+                .configGroup("oss").configKey("provider_name").configValue(providerName)
+                .enabled(enabled).sortOrder(0).description("OSS provider name").build());
+        systemConfigService.saveOrUpdateConfig(SaveConfigRequest.builder()
+                .configGroup("oss").configKey("access_key").configValue(accessKey)
+                .enabled(enabled).sortOrder(1).description("Qiniu Access Key").build());
+        systemConfigService.saveOrUpdateConfig(SaveConfigRequest.builder()
+                .configGroup("oss").configKey("secret_key").configValue(secretKey)
+                .enabled(enabled).sortOrder(2).description("Qiniu Secret Key").build());
+        systemConfigService.saveOrUpdateConfig(SaveConfigRequest.builder()
+                .configGroup("oss").configKey("bucket").configValue(bucket)
+                .enabled(enabled).sortOrder(3).description("Qiniu Bucket name").build());
+        systemConfigService.saveOrUpdateConfig(SaveConfigRequest.builder()
+                .configGroup("oss").configKey("cdn_domain").configValue(cdnDomain)
+                .enabled(enabled).sortOrder(4).description("Qiniu CDN domain").build());
+        systemConfigService.saveOrUpdateConfig(SaveConfigRequest.builder()
+                .configGroup("oss").configKey("priority").configValue(String.valueOf(priority))
+                .enabled(enabled).sortOrder(5).description("Config priority").build());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("status", "saved");
+        return ApiResponse.ok(data, RequestContextUtil.resolveRequestId(requestId, "req-admin-config-oss-save"));
     }
 
     /**

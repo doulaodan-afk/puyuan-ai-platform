@@ -2,7 +2,7 @@
   <section>
     <header class="row-head">
       <h1>账户余额</h1>
-      <button @click="loadBalance" :disabled="loading">{{ loading ? "加载中..." : "刷新" }}</button>
+      <button @click="loadAll" :disabled="loading">{{ loading ? "加载中..." : "刷新" }}</button>
     </header>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
@@ -17,12 +17,38 @@
         <RouterLink to="/account/ledger">查看流水</RouterLink>
       </div>
     </article>
+
+    <!-- 存储统计概览 -->
+    <section class="storage-section" v-if="storageOverview">
+      <h2>存储统计</h2>
+      <div class="storage-cards">
+        <article class="storage-card">
+          <h3>标准存储</h3>
+          <p class="value">{{ formatSize(storageOverview.standard_space_gb) }} GB</p>
+          <p class="sub">文件数: {{ storageOverview.standard_count }}</p>
+        </article>
+        <article class="storage-card">
+          <h3>低频存储</h3>
+          <p class="value">{{ formatSize(storageOverview.line_space_gb) }} GB</p>
+        </article>
+        <article class="storage-card">
+          <h3>归档存储</h3>
+          <p class="value">{{ formatSize(storageOverview.archive_space_gb) }} GB</p>
+        </article>
+        <article class="storage-card">
+          <h3>外网流出流量</h3>
+          <p class="value">{{ formatSize(storageOverview.blob_io_flux_gb) }} GB</p>
+        </article>
+      </div>
+      <p class="storage-meta">Bucket: {{ storageOverview.bucket }} | 查询范围: {{ storageOverview.query_range }}</p>
+    </section>
   </section>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { merchantRequest } from "../utils/http";
+import { getMerchantStorageOverview, type MerchantStorageOverview } from "../api/ossStatistics";
 
 interface BalanceData {
   token_balance: number;
@@ -34,12 +60,21 @@ interface BalanceData {
 const loading = ref(false);
 const errorMessage = ref("");
 const balance = ref<BalanceData | null>(null);
+const storageOverview = ref<MerchantStorageOverview | null>(null);
 
-async function loadBalance() {
+function formatSize(gb: number): string {
+  if (gb < 0.001) return "0";
+  if (gb < 1) return gb.toFixed(3);
+  if (gb < 100) return gb.toFixed(2);
+  return gb.toFixed(1);
+}
+
+async function loadAll() {
   loading.value = true;
   errorMessage.value = "";
   try {
     balance.value = await merchantRequest<BalanceData>("/api/v1/account/balance");
+    storageOverview.value = await getMerchantStorageOverview();
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "加载失败";
   } finally {
@@ -48,7 +83,7 @@ async function loadBalance() {
 }
 
 onMounted(() => {
-  void loadBalance();
+  void loadAll();
 });
 </script>
 
@@ -97,5 +132,55 @@ button {
 
 .error {
   color: hsl(var(--destructive));
+}
+
+.storage-section {
+  margin-top: 20px;
+}
+
+.storage-section h2 {
+  color: hsl(var(--foreground));
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.storage-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.storage-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  padding: 12px;
+}
+
+.storage-card h3 {
+  margin: 0 0 6px 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.storage-card .value {
+  font-size: 20px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+.storage-card .sub {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  margin: 4px 0 0 0;
+}
+
+.storage-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
 }
 </style>
