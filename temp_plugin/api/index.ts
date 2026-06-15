@@ -1,17 +1,31 @@
 // AI 设计助手 API 客户端
 // 所有请求路径统一使用 /api/plugins/ai-design-assistant/* 前缀
 // 支持 VITE_USE_MOCK=true 模式
+// 所有请求自动携带身份前缀信息
 
 const API_BASE = '/api/plugins/ai-design-assistant'
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
+// 获取身份信息
+function getIdentityInfo() {
+  const identityPrefix = localStorage.getItem('ai_design_identity_prefix') || ''
+  const identityTenantId = localStorage.getItem('ai_design_tenant_id') || ''
+  const identityRole = localStorage.getItem('ai_design_role') || ''
+  return { identityPrefix, identityTenantId, identityRole }
+}
+
 // 获取请求头
 function getHeaders() {
-  const tenantId = localStorage.getItem('tenantId') || '2001'
+  const tenantId = localStorage.getItem('tenantId') || localStorage.getItem('ai_design_tenant_id') || '2001'
   const userId = localStorage.getItem('userId') || '1'
+  const { identityPrefix, identityTenantId, identityRole } = getIdentityInfo()
+
   return {
-    'X-Tenant-Id': tenantId,
+    'X-Tenant-Id': identityTenantId || tenantId,
     'X-User-Id': userId,
+    'X-Identity-Prefix': identityPrefix,
+    'X-Identity-Role': identityRole,
+    'X-Identity-Tenant-Id': identityTenantId,
     'Content-Type': 'application/json',
   }
 }
@@ -189,10 +203,16 @@ export async function createRequirement(data: {
   rawText: string
   conversationHistory?: ChatMessage[]
   selectedSupplierId?: number
+  identityPrefix?: string
 }) {
+  // 自动附加身份前缀
+  const identityPrefix = getIdentityPrefix()
   return request<RequirementDetail>('/requirements', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      ...data,
+      identityPrefix: data.identityPrefix || identityPrefix,
+    }),
   })
 }
 
@@ -497,4 +517,28 @@ export async function getBalance() {
   return request<{ balance: number; frozen: number; total: number }>(
     '/api/v1/account/balance',
   )
+}
+
+// ====== 身份相关工具函数 ======
+
+/** 获取当前身份前缀 */
+export function getIdentityPrefix(): string {
+  return localStorage.getItem('ai_design_identity_prefix') || ''
+}
+
+/** 获取当前身份的租户ID */
+export function getIdentityTenantId(): string {
+  return localStorage.getItem('ai_design_tenant_id') || ''
+}
+
+/** 获取当前身份的角色 */
+export function getIdentityRole(): string {
+  return localStorage.getItem('ai_design_role') || ''
+}
+
+/** 清除身份信息（退出插件时） */
+export function clearIdentity() {
+  localStorage.removeItem('ai_design_identity_prefix')
+  localStorage.removeItem('ai_design_tenant_id')
+  localStorage.removeItem('ai_design_role')
 }

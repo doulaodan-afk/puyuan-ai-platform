@@ -20,7 +20,15 @@ public final class DesignAssistantDtos {
             String rawAudioUrl,
             @NotBlank String rawText,
             List<ChatMessage> conversationHistory,
-            Long selectedSupplierId  // 选中的面料商ID
+            Long selectedSupplierId,  // 选中的面料商ID（保留向后兼容）
+            List<FabricSelection> selectedFabrics  // 选中的面料列表（新增：支持多面料多供应商）
+    ) {}
+
+    /** 需求中选中的面料条目 */
+    public record FabricSelection(
+            @NotNull Long fabricId,          // fabric_library.id
+            Long fabricSupplierId,           // 面料特供商 user.id（冗余）
+            java.math.BigDecimal quantity    // 用量（米）
     ) {}
 
     // AI 对话请求
@@ -84,7 +92,8 @@ public final class DesignAssistantDtos {
             Integer totalTokenCost,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
-            List<TaskInfo> tasks
+            List<TaskInfo> tasks,
+            List<FabricInfo> linkedFabrics  // 关联的面料列表
     ) {}
 
     // 需求列表项
@@ -203,7 +212,8 @@ public final class DesignAssistantDtos {
             String category,
             boolean onlyVisible,
             int page,
-            int size
+            int size,
+            Long creatorId  // 按面料特供商筛选（新增）
     ) {}
 
     // 面料库列表响应
@@ -227,7 +237,9 @@ public final class DesignAssistantDtos {
             String stockStatus,
             Integer isVisible,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime updatedAt,
+            Long creatorId,           // 上传者（面料特供商 user.id）
+            String creatorName        // 上传者名称（冗余展示）
     ) {}
 
     // 添加面料请求

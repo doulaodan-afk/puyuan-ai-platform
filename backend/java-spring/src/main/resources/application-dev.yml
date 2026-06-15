@@ -1,6 +1,9 @@
 server:
   port: 8080
 
+upload:
+  base-path: ./uploads
+
 spring:
   autoconfigure:
     exclude:
@@ -8,7 +11,7 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/puyuan_ai_mvp?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://127.0.0.1:3306/puyuan_ai_mvp?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: 123456
   servlet:
@@ -64,6 +67,9 @@ logging:
 app:
   base-url: http://localhost:8080
   frontend-url: http://localhost:5173
+  storage:
+    mock:
+      enabled: true
   crypto:
     secret-key: ${CRYPTO_SECRET_KEY:puyuanmaoshan-crypto-dev-secret-key}
   security:

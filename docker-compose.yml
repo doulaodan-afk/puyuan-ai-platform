@@ -1,3 +1,14 @@
+# ============================================================
+# 濮院毛衫 AI 平台 - Docker Compose (本地开发/测试环境)
+# 
+# 启动: docker-compose up -d
+# 停止: docker-compose down
+# 重建: docker-compose up -d --build
+# 日志: docker-compose logs -f [service]
+# ============================================================
+
+version: '3.8'
+
 services:
   # ========================================
   # MySQL 8.4 数据库
@@ -6,6 +17,12 @@ services:
     image: mysql:8.4
     container_name: puyuan-mysql
     restart: always
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+      --max_connections=200
+      --innodb_buffer_pool_size=256M
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-puyuan_ai_mvp}
@@ -16,7 +33,7 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./sql:/docker-entrypoint-initdb.d
+      - ./sql:/docker-entrypoint-initdb.d:ro
     networks:
       - puyuan-network
     healthcheck:
@@ -33,7 +50,12 @@ services:
     image: redis:7-alpine
     container_name: puyuan-redis
     restart: always
-    command: redis-server --appendonly yes
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-}
     ports:
       - "6379:6379"
     volumes:
@@ -41,13 +63,13 @@ services:
     networks:
       - puyuan-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   # ========================================
-  # Spring Boot 后端
+  # Spring Boot 后端 (多阶段构建)
   # ========================================
   backend:
     build:
@@ -61,23 +83,31 @@ services:
       redis:
         condition: service_healthy
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - JAVA_OPTS=-Xms256m -Xmx512m
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-puyuan_ai_mvp}
-      - MYSQL_USER=${MYSQL_USER:-test123}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-test123}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    volumes:
-      - ./config/application-docker.yml:/app/config/application-docker.yml:ro
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-puyuan_ai_mvp}
+      MYSQL_USER: ${MYSQL_USER:-test123}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-test123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # AI 服务 (开发环境使用 Mock)
+      AI_MOCK_ENABLED: ${AI_MOCK_ENABLED:-true}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_API_KEY: ${AI_API_KEY:-}
+      # 限流（开发环境可关闭）
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-false}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-puyuanmaoshan-dev-jwt-secret}
     ports:
       - "8080:8080"
     networks:
       - puyuan-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -100,13 +130,21 @@ services:
       - ./frontend/admin-web/dist:/usr/share/nginx/html/admin:ro
     networks:
       - puyuan-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 networks:
   puyuan-network:
     driver: bridge
+    name: puyuan-network
 
 volumes:
   mysql_data:
     driver: local
+    name: puyuan_mysql_data
   redis_data:
     driver: local
+    name: puyuan_redis_data

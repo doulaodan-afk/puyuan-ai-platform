@@ -815,17 +815,9 @@ components:
     PricingConfig:
       type: object
       properties:
-        token_price_per_1k:
-          type: number
-          format: double
-        storage_price_per_gb_month:
-          type: number
-          format: double
-        free_token_quota_month:
+        register_bonus_token:
           type: integer
-        free_storage_quota_gb:
-          type: number
-          format: double
+          description: 新用户注册赠送 Token 数量，默认 1000
     BillingDashboard:
       type: object
       properties:

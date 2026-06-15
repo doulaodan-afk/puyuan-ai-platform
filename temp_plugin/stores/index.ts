@@ -11,7 +11,66 @@ import type {
   AiSummary,
 } from '../types'
 
+// 身份信息接口
+export interface IdentityInfo {
+  tenantId: number
+  tenantName: string
+  role: string
+  roleLabel: string
+  identityPrefix: string
+}
+
 export const useDesignAssistantStore = defineStore('designAssistant', () => {
+  // ========== 身份相关 ==========
+  const identity = ref<IdentityInfo | null>(null)
+
+  // 从 localStorage 恢复身份
+  function restoreIdentity() {
+    const prefix = localStorage.getItem('ai_design_identity_prefix')
+    const tenantId = localStorage.getItem('ai_design_tenant_id')
+    const role = localStorage.getItem('ai_design_role')
+
+    if (prefix && tenantId && role) {
+      // 从前缀中解析工作室名称和角色标签
+      const lastDash = prefix.lastIndexOf('-')
+      const tenantName = lastDash > 0 ? prefix.substring(0, lastDash) : prefix
+      const roleLabel = lastDash > 0 ? prefix.substring(lastDash + 1) : ''
+
+      identity.value = {
+        tenantId: parseInt(tenantId),
+        tenantName,
+        role,
+        roleLabel,
+        identityPrefix: prefix,
+      }
+    }
+  }
+
+  // 设置身份
+  function setIdentity(info: IdentityInfo) {
+    identity.value = info
+    localStorage.setItem('ai_design_identity_prefix', info.identityPrefix)
+    localStorage.setItem('ai_design_tenant_id', String(info.tenantId))
+    localStorage.setItem('ai_design_role', info.role)
+  }
+
+  // 清除身份
+  function clearIdentity() {
+    identity.value = null
+    localStorage.removeItem('ai_design_identity_prefix')
+    localStorage.removeItem('ai_design_tenant_id')
+    localStorage.removeItem('ai_design_role')
+  }
+
+  // 是否已选择身份
+  const hasIdentity = computed(() => identity.value !== null)
+
+  // 身份显示名称
+  const identityDisplayName = computed(() => {
+    if (!identity.value) return ''
+    return `${identity.value.tenantName} - ${identity.value.roleLabel}`
+  })
+
   // ========== 对话相关 ==========
   const currentSessionId = ref<string>('')
   const conversationHistory = ref<ChatMessage[]>([])
@@ -229,7 +288,7 @@ export const useDesignAssistantStore = defineStore('designAssistant', () => {
     statistics.value = stats
   }
 
-  // 重置
+  // 重置（保留身份）
   function reset() {
     clearConversation()
     currentRequirementId.value = null
@@ -252,7 +311,18 @@ export const useDesignAssistantStore = defineStore('designAssistant', () => {
     assignRules.value = []
   }
 
+  // 初始化时尝试恢复身份
+  restoreIdentity()
+
   return {
+    // 身份状态
+    identity,
+    hasIdentity,
+    identityDisplayName,
+    setIdentity,
+    clearIdentity,
+    restoreIdentity,
+
     // 状态
     currentSessionId,
     conversationHistory,

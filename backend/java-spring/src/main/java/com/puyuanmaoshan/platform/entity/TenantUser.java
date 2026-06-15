@@ -56,7 +56,7 @@ public class TenantUser {
         DESIGNER("designer", "设计师"),
         DESIGN_ASSISTANT("design_assistant", "设计助理"),
         PATTERN_MAKER("pattern_maker", "版师"),
-        OPERATOR("operator", "运营"),
+        OPERATOR("operator", "面料特供商"),
         VIEWER("viewer", "查看者");
 
         private final String code;
@@ -110,10 +110,13 @@ public class TenantUser {
     }
 
     /**
-     * 检查是否为老板
+     * 检查是否为老板（包括 merchant_owner 和 tenant_admin）
      */
     public boolean isBoss() {
-        return Role.BOSS.code.equals(this.role);
+        return Role.BOSS.code.equals(this.role)
+                || "merchant_owner".equals(this.role)
+                || "tenant_admin".equals(this.role)
+                || "platform_super_admin".equals(this.role);
     }
 
     /**

@@ -23,9 +23,6 @@ public class OssServiceImpl implements OssService {
     @Value("${upload.base-path:./uploads}")
     private String basePath;
 
-    @Value("${app.base-url:http://localhost:8080}")
-    private String appBaseUrl;
-
     @Override
     public String uploadBytes(byte[] bytes, String objectKey) {
         try {
@@ -33,7 +30,8 @@ public class OssServiceImpl implements OssService {
             Files.createDirectories(uploadPath.getParent());
             Files.write(uploadPath, bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-            String url = appBaseUrl + "/uploads/" + objectKey;
+            // 返回相对路径，由前端/Vite代理/Nginx统一处理转发
+            String url = "/uploads/" + objectKey;
             logger.info("Uploaded file to {}: {}", uploadPath, url);
             return url;
         } catch (IOException e) {
@@ -67,6 +65,6 @@ public class OssServiceImpl implements OssService {
 
     @Override
     public String getFileUrl(String objectKey) {
-        return appBaseUrl + "/uploads/" + objectKey;
+        return "/uploads/" + objectKey;
     }
 }

@@ -1,4 +1,5 @@
 ﻿import type { RequestContext } from "./types";
+import { generateUUID } from "./uuid";
 
 export class HttpClient {
   constructor(private readonly baseUrl: string) {}
@@ -11,7 +12,7 @@ export class HttpClient {
   ): Promise<T> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "X-Request-Id": context.requestId ?? crypto.randomUUID(),
+      "X-Request-Id": context.requestId ?? generateUUID(),
     };
 
     // # MEMORY: tenant-id and idempotency-key are attached centrally to avoid endpoint-level omissions that could break billing consistency.

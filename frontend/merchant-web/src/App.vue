@@ -4,7 +4,10 @@
       <button class="menu-btn" @click="mobileMenuOpen = !mobileMenuOpen" title="菜单">
         <el-icon class="action-icon"><Menu /></el-icon>
       </button>
-      <strong class="brand">濮院毛衫 AI</strong>
+      <RouterLink v-if="showBrand" to="/dashboard" class="brand-link">
+        <img :src="auth.logoUrl || '/logo/small-logo.png'" alt="Logo" class="brand-logo" />
+        <strong class="brand">濮院毛衫AI平台{{ auth.enterpriseName ? ' | ' + auth.enterpriseName : '' }}</strong>
+      </RouterLink>
       <nav class="desktop-nav">
         <RouterLink to="/dashboard">工作台</RouterLink>
         <RouterLink to="/plugins">插件</RouterLink>
@@ -12,9 +15,6 @@
         <RouterLink to="/billing">账单</RouterLink>
       </nav>
       <div class="actions">
-        <RouterLink to="/profile" class="icon-btn" title="个人中心">
-          <el-icon class="action-icon"><User /></el-icon>
-        </RouterLink>
         <RouterLink to="/settings" class="icon-btn" title="设置">
           <el-icon class="action-icon"><Setting /></el-icon>
         </RouterLink>
@@ -33,7 +33,10 @@
       <Transition name="slide">
         <nav v-if="mobileMenuOpen" class="mobile-nav">
           <div class="mobile-nav-header">
-            <span>菜单</span>
+            <div class="mobile-brand">
+              <img :src="auth.logoUrl || '/logo/small-logo.png'" alt="Logo" class="mobile-brand-logo" />
+              <span>濮院毛衫AI平台{{ auth.enterpriseName ? ' | ' + auth.enterpriseName : '' }}</span>
+            </div>
             <button @click="mobileMenuOpen = false">
               <el-icon><Close /></el-icon>
             </button>
@@ -47,7 +50,6 @@
               <el-icon><Grid /></el-icon>
               <span>插件</span>
             </RouterLink>
-
             <RouterLink to="/account/balance" @click="mobileMenuOpen = false">
               <el-icon><Wallet /></el-icon>
               <span>账户</span>
@@ -55,10 +57,6 @@
             <RouterLink to="/billing" @click="mobileMenuOpen = false">
               <el-icon><Document /></el-icon>
               <span>账单</span>
-            </RouterLink>
-            <RouterLink to="/profile" @click="mobileMenuOpen = false">
-              <el-icon><User /></el-icon>
-              <span>个人中心</span>
             </RouterLink>
             <RouterLink to="/settings" @click="mobileMenuOpen = false">
               <el-icon><Setting /></el-icon>
@@ -86,9 +84,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { User, Setting, SwitchButton, Menu, Close, HomeFilled, Grid, Wallet, Document, UserFilled } from '@element-plus/icons-vue'
+import { Setting, SwitchButton, Menu, Close, HomeFilled, Grid, Wallet, Document, UserFilled } from '@element-plus/icons-vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import { useAuthStore } from './stores/auth'
 
@@ -98,6 +96,19 @@ const auth = useAuthStore()
 const mobileMenuOpen = ref(false)
 
 const isSandbox = computed(() => auth.isSandbox)
+
+// Hide brand (logo + name) on pages like login, forbidden
+const hideBrandRoutes = ['MerchantLogin', 'MerchantForbidden']
+const showBrand = computed(() => !hideBrandRoutes.includes(route.name as string))
+
+// 动态同步租户企业名称到浏览器 tab 标题
+watch(
+  () => auth.enterpriseName,
+  (name) => {
+    document.title = name ? `濮院毛衫AI平台 | ${name}` : '濮院毛衫AI平台'
+  },
+  { immediate: true }
+)
 
 function handleLogout() {
   mobileMenuOpen.value = false
@@ -142,20 +153,11 @@ function handleLogout() {
   }
 }
 
-/* Brand */
-.brand {
-  font-size: 16px;
-  font-weight: 600;
-  color: hsl(var(--foreground));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@media (min-width: 768px) {
-  .brand {
-    font-size: 18px;
-  }
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
 }
 
 /* Menu button - mobile only */
@@ -348,6 +350,19 @@ function handleLogout() {
 
 .mobile-nav-links .el-icon {
   font-size: 20px;
+}
+
+.mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-brand-logo {
+  width: 28px;
+  height: 25px;
+  border-radius: 4px;
+  object-fit: cover;
 }
 
 .mobile-nav-footer {

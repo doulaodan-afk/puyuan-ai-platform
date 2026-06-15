@@ -11,7 +11,19 @@ import type {
   AiSummary,
 } from '../types'
 
+// 身份信息
+export interface IdentityInfo {
+  tenantId: number
+  tenantName: string
+  role: string
+  roleLabel: string
+  identityPrefix: string
+}
+
 export const useDesignAssistantStore = defineStore('designAssistant', () => {
+  // ========== 身份相关 ==========
+  const identity = ref<IdentityInfo | null>(null)
+
   // ========== 对话相关 ==========
   const currentSessionId = ref<string>('')
   const conversationHistory = ref<ChatMessage[]>([])
@@ -229,6 +241,15 @@ export const useDesignAssistantStore = defineStore('designAssistant', () => {
     statistics.value = stats
   }
 
+  // 身份相关
+  function setIdentity(info: IdentityInfo) {
+    identity.value = info
+  }
+
+  function clearIdentity() {
+    identity.value = null
+  }
+
   // 重置
   function reset() {
     clearConversation()
@@ -254,6 +275,7 @@ export const useDesignAssistantStore = defineStore('designAssistant', () => {
 
   return {
     // 状态
+    identity,
     currentSessionId,
     conversationHistory,
     currentRequirementId,
@@ -314,6 +336,8 @@ export const useDesignAssistantStore = defineStore('designAssistant', () => {
     removeFabric,
     setAssignRules,
     setStatistics,
+    setIdentity,
+    clearIdentity,
     reset,
     resetAll,
   }

@@ -2,13 +2,16 @@
   "plugin_id": "ai-design-assistant",
   "name": "AI设计助手",
   "version": "1.0.0",
-  "description": "基于AI的设计需求管理和任务协作平台",
+  "description": "基于AI的设计需求管理和任务协作平台（进入前需选择身份）",
   "icon_url": "",
   "billing_type": "free",
   "default_token_cost": 0,
-  "frontend_entry": "/plugins/ai-design-assistant/index.html",
+  "frontend_entry": "/plugins/ai-design-assistant/identity",
   "backend_api": "/api/plugins/ai-design-assistant",
   "need_config": false,
   "visible_to": [],
-  "required_role": "merchant"
+  "required_role": "merchant",
+  "requires_identity": true,
+  "identity_model": "studio_role",
+  "identity_prefix_format": "{studio_name}-{role_label}"
 }

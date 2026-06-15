@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getRequirementList } from '../api'
+import { getRequirementList, getIdentityPrefix } from '../api'
 import { useDesignAssistantStore } from '../stores'
 
 const router = useRouter()
 const store = useDesignAssistantStore()
+
+// 身份前缀
+const identityPrefix = computed(() => store.identity?.identityPrefix || getIdentityPrefix())
 
 // 筛选状态
 const statusFilter = ref('')
@@ -113,10 +116,13 @@ function formatDate(dateStr: string) {
 <template>
   <div class="task-board-page page-container">
     <header class="header">
-      <h1>任务看板</h1>
-      <button @click="createNew" class="btn btn-primary">
-        + 创建需求
-      </button>
+      <div class="header-title-row">
+        <h1>👑 管理看板</h1>
+        <span v-if="identityPrefix" class="identity-prefix-tag">
+          {{ identityPrefix }}
+        </span>
+      </div>
+      <div class="header-desc">查看工作室所有需求与任务进度</div>
     </header>
 
     <!-- 统计卡片 -->
@@ -246,14 +252,41 @@ function formatDate(dateStr: string) {
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .header h1 {
   margin: 0;
   color: #1f2937;
   font-size: 24px;
+}
+
+.header-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.identity-prefix-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  background: #eef2ff;
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #4338ca;
+  font-weight: 500;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
 }
 
 .stats-grid {

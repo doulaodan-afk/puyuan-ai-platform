@@ -38,3 +38,25 @@ body {
 .content {
   padding: 16px 20px;
 }
+
+/* 平台品牌名 - 全局样式确保始终可见 */
+.brand-link {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand-link .brand {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .brand-link .brand {
+    font-size: 18px;
+  }
+}

@@ -395,6 +395,8 @@ CREATE TABLE IF NOT EXISTS design_task (
 CREATE TABLE IF NOT EXISTS fabric_library (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   supplier_tenant_id BIGINT NOT NULL,
+  tenant_id BIGINT COMMENT '所属商家租户ID（面料特供商所在工作室）',
+  creator_id BIGINT COMMENT '上传者用户ID（面料特供商本人）',
   name VARCHAR(128) NOT NULL,
   category VARCHAR(64),
   images TEXT,
@@ -405,8 +407,23 @@ CREATE TABLE IF NOT EXISTS fabric_library (
   is_visible INT DEFAULT 1,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_fl_supplier (supplier_tenant_id)
+  INDEX idx_fl_supplier (supplier_tenant_id),
+  INDEX idx_fl_tenant (tenant_id),
+  INDEX idx_fl_creator (creator_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS requirement_fabric (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  requirement_id BIGINT NOT NULL COMMENT '设计需求ID',
+  fabric_id BIGINT NOT NULL COMMENT '面料库条目ID',
+  fabric_supplier_id BIGINT COMMENT '面料特供商用户ID',
+  quantity DECIMAL(10,2) COMMENT '用量（米）',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_req_fabric (requirement_id, fabric_id),
+  INDEX idx_rf_requirement (requirement_id),
+  INDEX idx_rf_fabric (fabric_id),
+  INDEX idx_rf_supplier (fabric_supplier_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设计需求-面料关联表';
 
 CREATE TABLE IF NOT EXISTS supplier_registration (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,

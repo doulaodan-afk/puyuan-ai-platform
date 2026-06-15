@@ -7,10 +7,21 @@ import { useAuthStore } from '@/stores/auth'
 const API_BASE = '/api/plugins/ai-design-assistant'
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
-// 获取请求头：从 auth store 取 tenantId 和 accessToken，解析 userId
+// 获取身份前缀
+export function getIdentityPrefix(): string {
+  return localStorage.getItem('ai_design_identity_prefix') || ''
+}
+
+// 获取身份角色
+export function getIdentityRole(): string {
+  return localStorage.getItem('ai_design_role') || ''
+}
+
+// 获取请求头：插件使用自己的租户上下文（ai_design_tenant_id），不污染全局 auth
 function getHeaders() {
   const auth = useAuthStore()
-  const tenantId = auth.tenantId || '1'
+  // 插件优先使用自己的租户ID，回退到全局 auth store
+  const tenantId = localStorage.getItem('ai_design_tenant_id') || auth.tenantId || '1'
   let userId = '1'
   if (auth.accessToken) {
     const raw = auth.accessToken.replace('Bearer ', '')
@@ -508,13 +519,25 @@ export async function getMessageList(params: {
   page?: number
   size?: number
 }) {
-  const query = new URLSearchParams(params as any).toString()
-  return request<{
-    messages: MessageInfo[]
-    total: number
-    page: number
-    size: number
-  }>(`/messages?userId=1&${query}`)
+  // 从 auth store 获取 userId
+  const auth = useAuthStore()
+  let userId = '1'
+  if (auth.accessToken) {
+    const raw = auth.accessToken.replace('Bearer ', '')
+    const parts = raw.split('-')
+    if (parts.length >= 2) {
+      userId = parts[1]
+    }
+  }
+  const query = new URLSearchParams({ userId, ...params } as any).toString()
+  // 后端返回 List<Message>，适配为 { messages, total } 格式
+  const list = await request<MessageInfo[]>(`/messages?${query}`)
+  return {
+    messages: Array.isArray(list) ? list : [],
+    total: Array.isArray(list) ? list.length : 0,
+    page: params.page || 1,
+    size: params.size || 20,
+  }
 }
 
 export async function markMessageRead(messageId: number) {
@@ -527,7 +550,18 @@ export async function markMessageRead(messageId: number) {
 }
 
 export async function getUnreadCount() {
-  return request<number>('/messages/unread-count')
+  // 从 auth store 获取 userId
+  const auth = useAuthStore()
+  let userId = '1'
+  if (auth.accessToken) {
+    const raw = auth.accessToken.replace('Bearer ', '')
+    const parts = raw.split('-')
+    if (parts.length >= 2) {
+      userId = parts[1]
+    }
+  }
+  const result = await request<number>(`/messages/count/unread?userId=${userId}`)
+  return typeof result === 'number' ? result : 0
 }
 
 // ====== 统计数据 ======

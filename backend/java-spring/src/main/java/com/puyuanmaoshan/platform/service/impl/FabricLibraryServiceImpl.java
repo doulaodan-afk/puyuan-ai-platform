@@ -7,9 +7,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.puyuanmaoshan.platform.dto.DesignAssistantDtos;
 import com.puyuanmaoshan.platform.entity.FabricLibrary;
-import com.puyuanmaoshan.platform.entity.Tenant;
+import com.puyuanmaoshan.platform.entity.TenantUser;
 import com.puyuanmaoshan.platform.mapper.FabricLibraryMapper;
-import com.puyuanmaoshan.platform.mapper.TenantMapper;
+import com.puyuanmaoshan.platform.mapper.TenantUserMapper;
 import com.puyuanmaoshan.platform.service.FabricLibraryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,31 +21,47 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 面料库服务实现 —— 支持面料特供商用户级数据隔离
+ *
+ * 隔离规则：
+ * - 创建面料时写入 tenant_id + creator_id
+ * - 查询时：面料特供商只看自己上传的面料（WHERE tenant_id=? AND creator_id=?）
+ * - 设计师查看时：可看同工作室所有特供商的面料（WHERE tenant_id=?）
+ * - 编辑/下架时：校验 creator_id 是否为当前用户
+ */
 @Service
 public class FabricLibraryServiceImpl implements FabricLibraryService {
     private static final Logger logger = LoggerFactory.getLogger(FabricLibraryServiceImpl.class);
 
     private final FabricLibraryMapper fabricLibraryMapper;
-    private final TenantMapper tenantMapper;
+    private final TenantUserMapper tenantUserMapper;
     private final ObjectMapper objectMapper;
 
     public FabricLibraryServiceImpl(FabricLibraryMapper fabricLibraryMapper,
-                                     TenantMapper tenantMapper,
+                                     TenantUserMapper tenantUserMapper,
                                      ObjectMapper objectMapper) {
         this.fabricLibraryMapper = fabricLibraryMapper;
-        this.tenantMapper = tenantMapper;
+        this.tenantUserMapper = tenantUserMapper;
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public DesignAssistantDtos.FabricLibraryListResponse getFabricLibraryList(Long supplierTenantId, String category,
-                                                                                 boolean onlyVisible, int page, int size) {
+    public DesignAssistantDtos.FabricLibraryListResponse getFabricLibraryList(
+            Long tenantId, Long creatorId, String category, boolean onlyVisible, int page, int size) {
         try {
             LambdaQueryWrapper<FabricLibrary> wrapper = new LambdaQueryWrapper<>();
 
-            if (supplierTenantId != null) {
-                wrapper.eq(FabricLibrary::getSupplierTenantId, supplierTenantId);
+            // 租户级隔离：只查本工作室的面料
+            if (tenantId != null) {
+                wrapper.eq(FabricLibrary::getTenantId, tenantId);
             }
+
+            // 用户级隔离：如果传了 creatorId，只查该特供商的面料
+            if (creatorId != null) {
+                wrapper.eq(FabricLibrary::getCreatorId, creatorId);
+            }
+
             if (category != null && !category.isEmpty()) {
                 wrapper.like(FabricLibrary::getCategory, category);
             }
@@ -58,21 +74,7 @@ public class FabricLibraryServiceImpl implements FabricLibraryService {
 
             List<DesignAssistantDtos.FabricInfo> result = new ArrayList<>();
             for (FabricLibrary fabric : pageObj.getRecords()) {
-                List<String> images = objectMapper.readValue(
-                    fabric.getImages() != null ? fabric.getImages() : "[]",
-                    new TypeReference<List<String>>() {}
-                );
-                Map<String, Object> specs = objectMapper.readValue(
-                    fabric.getSpecs() != null ? fabric.getSpecs() : "{}",
-                    new TypeReference<Map<String, Object>>() {}
-                );
-
-                result.add(new DesignAssistantDtos.FabricInfo(
-                    fabric.getId(), fabric.getSupplierTenantId(), fabric.getName(),
-                    fabric.getCategory(), images, fabric.getVideoUrl(),
-                    specs, fabric.getPricePerMeter(), fabric.getStockStatus(),
-                    fabric.getIsVisible(), fabric.getCreatedAt(), fabric.getUpdatedAt()
-                ));
+                result.add(toFabricInfo(fabric, fabric.getTenantId()));
             }
 
             return new DesignAssistantDtos.FabricLibraryListResponse(result, pageObj.getTotal(), page, size);
@@ -84,33 +86,20 @@ public class FabricLibraryServiceImpl implements FabricLibraryService {
     }
 
     @Override
-    public DesignAssistantDtos.FabricInfo getFabricDetail(Long fabricId, Long tenantId) {
+    public DesignAssistantDtos.FabricInfo getFabricDetail(Long fabricId, Long tenantId, Long userId) {
         try {
             FabricLibrary fabric = fabricLibraryMapper.selectById(fabricId);
             if (fabric == null) {
                 throw new RuntimeException("面料不存在");
             }
 
-            // 检查权限：只能查看自己的面料或公开的面料
-            if (!fabric.getSupplierTenantId().equals(tenantId) && fabric.getIsVisible() != 1) {
+            // 权限检查：同工作室成员可看，或公开面料可见
+            boolean sameTenant = fabric.getTenantId() != null && fabric.getTenantId().equals(tenantId);
+            if (!sameTenant && fabric.getIsVisible() != 1) {
                 throw new RuntimeException("无权访问此面料");
             }
 
-            List<String> images = objectMapper.readValue(
-                fabric.getImages() != null ? fabric.getImages() : "[]",
-                new TypeReference<List<String>>() {}
-            );
-            Map<String, Object> specs = objectMapper.readValue(
-                fabric.getSpecs() != null ? fabric.getSpecs() : "{}",
-                new TypeReference<Map<String, Object>>() {}
-            );
-
-            return new DesignAssistantDtos.FabricInfo(
-                fabric.getId(), fabric.getSupplierTenantId(), fabric.getName(),
-                fabric.getCategory(), images, fabric.getVideoUrl(),
-                specs, fabric.getPricePerMeter(), fabric.getStockStatus(),
-                fabric.getIsVisible(), fabric.getCreatedAt(), fabric.getUpdatedAt()
-            );
+            return toFabricInfo(fabric, fabric.getTenantId());
 
         } catch (Exception e) {
             logger.error("Get fabric detail failed", e);
@@ -120,23 +109,24 @@ public class FabricLibraryServiceImpl implements FabricLibraryService {
 
     @Override
     @Transactional
-    public DesignAssistantDtos.CommonResponse createFabric(DesignAssistantDtos.CreateFabricRequest request, Long tenantId, Long userId) {
+    public DesignAssistantDtos.CommonResponse createFabric(
+            DesignAssistantDtos.CreateFabricRequest request, Long tenantId, Long userId) {
         try {
-            // 检查租户类型
-            Tenant tenant = tenantMapper.selectById(tenantId);
-            if (tenant == null) {
-                return DesignAssistantDtos.ResponseHelper.error("租户不存在");
-            }
-            // 只有面料商可以创建面料
-            if (!"supplier".equals(tenant.getTenantType())) {
-                return DesignAssistantDtos.ResponseHelper.error("只有面料商可以添加面料");
+            // 校验用户是否属于该工作室
+            TenantUser tu = tenantUserMapper.selectByUserIdAndTenantId(userId, tenantId);
+            if (tu == null) {
+                return DesignAssistantDtos.ResponseHelper.error("您不属于此工作室");
             }
 
-            String imagesJson = objectMapper.writeValueAsString(request.images() != null ? request.images() : new ArrayList<>());
-            String specsJson = objectMapper.writeValueAsString(request.specs() != null ? request.specs() : new ArrayList<>());
+            String imagesJson = objectMapper.writeValueAsString(
+                    request.images() != null ? request.images() : new ArrayList<>());
+            String specsJson = objectMapper.writeValueAsString(
+                    request.specs() != null ? request.specs() : new ArrayList<>());
 
             FabricLibrary fabric = FabricLibrary.builder()
-                    .supplierTenantId(tenantId)
+                    .supplierTenantId(tenantId)     // 保留兼容
+                    .tenantId(tenantId)             // 所属工作室
+                    .creatorId(userId)              // 上传者（面料特供商本人）
                     .name(request.name())
                     .category(request.category())
                     .images(imagesJson)
@@ -160,40 +150,27 @@ public class FabricLibraryServiceImpl implements FabricLibraryService {
 
     @Override
     @Transactional
-    public DesignAssistantDtos.CommonResponse updateFabric(DesignAssistantDtos.UpdateFabricRequest request, Long tenantId, Long userId) {
+    public DesignAssistantDtos.CommonResponse updateFabric(
+            DesignAssistantDtos.UpdateFabricRequest request, Long tenantId, Long userId) {
         try {
             FabricLibrary fabric = fabricLibraryMapper.selectById(request.id());
             if (fabric == null) {
                 return DesignAssistantDtos.ResponseHelper.error("面料不存在");
             }
-            if (!fabric.getSupplierTenantId().equals(tenantId)) {
-                return DesignAssistantDtos.ResponseHelper.error("无权操作此面料");
+
+            // 权限校验：只有上传者本人可以编辑
+            if (fabric.getCreatorId() == null || !fabric.getCreatorId().equals(userId)) {
+                return DesignAssistantDtos.ResponseHelper.error("无权操作此面料，仅上传者本人可编辑");
             }
 
-            if (request.name() != null) {
-                fabric.setName(request.name());
-            }
-            if (request.category() != null) {
-                fabric.setCategory(request.category());
-            }
-            if (request.images() != null) {
-                fabric.setImages(objectMapper.writeValueAsString(request.images()));
-            }
-            if (request.videoUrl() != null) {
-                fabric.setVideoUrl(request.videoUrl());
-            }
-            if (request.specs() != null) {
-                fabric.setSpecs(objectMapper.writeValueAsString(request.specs()));
-            }
-            if (request.pricePerMeter() != null) {
-                fabric.setPricePerMeter(request.pricePerMeter());
-            }
-            if (request.stockStatus() != null) {
-                fabric.setStockStatus(request.stockStatus());
-            }
-            if (request.isVisible() != null) {
-                fabric.setIsVisible(request.isVisible());
-            }
+            if (request.name() != null) fabric.setName(request.name());
+            if (request.category() != null) fabric.setCategory(request.category());
+            if (request.images() != null) fabric.setImages(objectMapper.writeValueAsString(request.images()));
+            if (request.videoUrl() != null) fabric.setVideoUrl(request.videoUrl());
+            if (request.specs() != null) fabric.setSpecs(objectMapper.writeValueAsString(request.specs()));
+            if (request.pricePerMeter() != null) fabric.setPricePerMeter(request.pricePerMeter());
+            if (request.stockStatus() != null) fabric.setStockStatus(request.stockStatus());
+            if (request.isVisible() != null) fabric.setIsVisible(request.isVisible());
 
             fabric.setUpdatedAt(LocalDateTime.now());
             fabricLibraryMapper.updateById(fabric);
@@ -214,8 +191,10 @@ public class FabricLibraryServiceImpl implements FabricLibraryService {
             if (fabric == null) {
                 return DesignAssistantDtos.ResponseHelper.error("面料不存在");
             }
-            if (!fabric.getSupplierTenantId().equals(tenantId)) {
-                return DesignAssistantDtos.ResponseHelper.error("无权操作此面料");
+
+            // 权限校验：只有上传者本人可以下架
+            if (fabric.getCreatorId() == null || !fabric.getCreatorId().equals(userId)) {
+                return DesignAssistantDtos.ResponseHelper.error("无权操作此面料，仅上传者本人可下架");
             }
 
             fabricLibraryMapper.deleteById(fabricId);
@@ -225,6 +204,39 @@ public class FabricLibraryServiceImpl implements FabricLibraryService {
         } catch (Exception e) {
             logger.error("Delete fabric failed", e);
             return DesignAssistantDtos.ResponseHelper.error("删除失败: " + e.getMessage());
+        }
+    }
+
+    // ====== 内部工具方法 ======
+
+    private DesignAssistantDtos.FabricInfo toFabricInfo(FabricLibrary fabric, Long tenantId) {
+        try {
+            List<String> images = objectMapper.readValue(
+                    fabric.getImages() != null ? fabric.getImages() : "[]",
+                    new TypeReference<List<String>>() {});
+            Map<String, Object> specs = objectMapper.readValue(
+                    fabric.getSpecs() != null ? fabric.getSpecs() : "{}",
+                    new TypeReference<Map<String, Object>>() {});
+
+            // 获取上传者名称
+            String creatorName = null;
+            if (fabric.getCreatorId() != null && tenantId != null) {
+                TenantUser tu = tenantUserMapper.selectByUserIdAndTenantId(fabric.getCreatorId(), tenantId);
+                if (tu != null) {
+                    creatorName = TenantUser.Role.fromCode(tu.getRole()).getName();
+                }
+            }
+
+            return new DesignAssistantDtos.FabricInfo(
+                    fabric.getId(), fabric.getSupplierTenantId(), fabric.getName(),
+                    fabric.getCategory(), images, fabric.getVideoUrl(),
+                    specs, fabric.getPricePerMeter(), fabric.getStockStatus(),
+                    fabric.getIsVisible(), fabric.getCreatedAt(), fabric.getUpdatedAt(),
+                    fabric.getCreatorId(), creatorName
+            );
+        } catch (Exception e) {
+            logger.error("Parse fabric info failed", e);
+            return null;
         }
     }
 }

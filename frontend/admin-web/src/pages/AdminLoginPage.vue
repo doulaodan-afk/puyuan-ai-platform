@@ -27,6 +27,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAdminAuthStore } from "../stores/adminAuth";
+import { generateUUID } from "../utils/uuid";
 
 const mobile = ref("");
 const verifyCode = ref("");
@@ -59,7 +60,7 @@ async function sendSmsCode() {
   try {
     const response = await fetch(`/api/v1/sms/send-login-code?mobile=${encodeURIComponent(mobile.value)}`, {
       method: "POST",
-      headers: { "X-Request-Id": crypto.randomUUID() },
+      headers: { "X-Request-Id": generateUUID() },
     });
     const payload = await response.json();
     if (payload.code !== 0) {

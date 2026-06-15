@@ -1,4 +1,5 @@
 import { useAuthStore } from "../stores/auth";
+import { generateUUID } from "./uuid";
 
 export interface ApiEnvelope<T> {
   code: number;
@@ -9,7 +10,7 @@ export interface ApiEnvelope<T> {
 export function buildMerchantHeaders(extra?: Record<string, string>): HeadersInit {
   const auth = useAuthStore();
   const headers: Record<string, string> = {
-    "X-Request-Id": crypto.randomUUID(),
+    "X-Request-Id": generateUUID(),
     ...(extra ?? {}),
   };
 

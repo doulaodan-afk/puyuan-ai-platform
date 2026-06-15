@@ -10,6 +10,7 @@ public class AiDesignAssistantDtos {
 
     public static class RequirementCreateRequest {
         private String title;
+        private String identityPrefix;
         private List<String> rawImages;
         private List<String> rawVideos;
         private String rawAudioUrl;
@@ -17,6 +18,8 @@ public class AiDesignAssistantDtos {
 
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }
+        public String getIdentityPrefix() { return identityPrefix; }
+        public void setIdentityPrefix(String identityPrefix) { this.identityPrefix = identityPrefix; }
         public List<String> getRawImages() { return rawImages; }
         public void setRawImages(List<String> rawImages) { this.rawImages = rawImages; }
         public List<String> getRawVideos() { return rawVideos; }

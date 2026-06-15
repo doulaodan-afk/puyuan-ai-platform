@@ -199,7 +199,7 @@ function stopPolling() {
 
     <div v-if="loading" class="loading">加载中...</div>
 
-    <div v-else-if="messages.length === 0" class="empty">
+    <div v-else-if="!messages || messages.length === 0" class="empty">
       <div class="empty-icon">📬</div>
       <p>暂无消息</p>
     </div>

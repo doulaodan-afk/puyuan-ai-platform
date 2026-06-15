@@ -68,7 +68,22 @@ const PLUGIN_ROUTES: Record<string, string> = {
 
 function openPlugin(item: PluginItem) {
   const routePath = PLUGIN_ROUTES[item.plugin_id] || `/plugins/${item.plugin_id}`;
-  router.push(routePath);
+  // AI 设计助手插件：已有身份标记时直接进入，不再强制清除重选
+  // 用户可在插件内通过工作室切换菜单切换工作室，无需每次重新选择
+  if (item.plugin_id === 'ai_design_assistant') {
+    const hasIdentity = localStorage.getItem('ai_design_role')
+      && localStorage.getItem('ai_design_tenant_id')
+      && localStorage.getItem('ai_design_identity_prefix')
+    if (hasIdentity) {
+      router.push(routePath)
+      return
+    }
+  }
+  // 其他插件或首次进入 AI 设计助手时，清除身份标记
+  localStorage.removeItem('ai_design_role')
+  localStorage.removeItem('ai_design_tenant_id')
+  localStorage.removeItem('ai_design_identity_prefix')
+  router.push(routePath)
 }
 
 async function enablePlugin(item: PluginItem) {

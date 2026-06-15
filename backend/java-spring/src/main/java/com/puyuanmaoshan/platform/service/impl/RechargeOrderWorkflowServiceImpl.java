@@ -14,6 +14,7 @@ import com.puyuanmaoshan.platform.service.AccountWalletService;
 import com.puyuanmaoshan.platform.service.AuditLogService;
 import com.puyuanmaoshan.platform.service.BillingLedgerService;
 import com.puyuanmaoshan.platform.service.IdempotencyRecordService;
+import com.puyuanmaoshan.platform.service.PricingConfigService;
 import com.puyuanmaoshan.platform.service.RechargeOrderService;
 import com.puyuanmaoshan.platform.service.RechargeOrderWorkflowService;
 import com.puyuanmaoshan.platform.util.BizNoUtil;
@@ -30,13 +31,13 @@ import java.util.Objects;
 
 @Service
 public class RechargeOrderWorkflowServiceImpl implements RechargeOrderWorkflowService {
-    private static final BigDecimal TOKEN_RATIO = new BigDecimal("2000");
 
     private final RechargeOrderService rechargeOrderService;
     private final IdempotencyRecordService idempotencyRecordService;
     private final AccountWalletService accountWalletService;
     private final BillingLedgerService billingLedgerService;
     private final AuditLogService auditLogService;
+    private final PricingConfigService pricingConfigService;
     private final ObjectMapper objectMapper;
 
     public RechargeOrderWorkflowServiceImpl(RechargeOrderService rechargeOrderService,
@@ -44,12 +45,14 @@ public class RechargeOrderWorkflowServiceImpl implements RechargeOrderWorkflowSe
                                             AccountWalletService accountWalletService,
                                             BillingLedgerService billingLedgerService,
                                             AuditLogService auditLogService,
+                                            PricingConfigService pricingConfigService,
                                             ObjectMapper objectMapper) {
         this.rechargeOrderService = rechargeOrderService;
         this.idempotencyRecordService = idempotencyRecordService;
         this.accountWalletService = accountWalletService;
         this.billingLedgerService = billingLedgerService;
         this.auditLogService = auditLogService;
+        this.pricingConfigService = pricingConfigService;
         this.objectMapper = objectMapper;
     }
 
@@ -70,7 +73,8 @@ public class RechargeOrderWorkflowServiceImpl implements RechargeOrderWorkflowSe
         }
 
         String orderNo = BizNoUtil.nextNo("RC");
-        long tokenGrant = request.amount().multiply(TOKEN_RATIO).longValue();
+        BigDecimal tokenRatio = pricingConfigService.getTokenRatio();
+        long tokenGrant = request.amount().multiply(tokenRatio).longValue();
         RechargeOrder order = RechargeOrder.builder()
                 .orderNo(orderNo)
                 .tenantId(tenantId)

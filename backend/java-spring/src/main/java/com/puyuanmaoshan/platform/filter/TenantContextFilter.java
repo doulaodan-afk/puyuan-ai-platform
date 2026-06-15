@@ -34,7 +34,10 @@ public class TenantContextFilter extends OncePerRequestFilter {
             "/api/v1/auth/verify",
             "/api/v1/auth/register",
             "/api/v1/tenant/user/tenants",
+            "/api/tenant/user/tenants",
+            "/api/tenant/create",
             "/api/tenant/switch",
+            "/api/tenant/roles",
             "/api/supplier/register",
             "/api/v1/sms/",
             "/api/admin/",
@@ -42,7 +45,8 @@ public class TenantContextFilter extends OncePerRequestFilter {
             "/api/v1/merchant/auth/login",
             "/api/v1/user/",
             "/health",
-            "/actuator"
+            "/actuator",
+            "/uploads"
     };
 
     public TenantContextFilter(TenantMemberService tenantMemberService) {

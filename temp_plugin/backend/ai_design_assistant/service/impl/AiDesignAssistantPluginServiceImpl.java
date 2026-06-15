@@ -147,6 +147,7 @@ public class AiDesignAssistantPluginServiceImpl implements AiDesignAssistantPlug
         r.setTenantId(tenantId);
         r.setCreatorId(creatorId);
         r.setTitle(request.getTitle());
+        r.setIdentityPrefix(request.getIdentityPrefix()); // 保存身份前缀
         r.setRawImages(request.getRawImages());
         r.setRawVideos(request.getRawVideos());
         r.setRawAudioUrl(request.getRawAudioUrl());

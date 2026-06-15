@@ -1,12 +1,27 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getRequirementList } from '../api'
+import { getRequirementList, getIdentityPrefix, getIdentityRole } from '../api'
 import { useDesignAssistantStore } from '../stores'
 import type { RequirementListItem } from '../api'
 
 const router = useRouter()
 const store = useDesignAssistantStore()
+
+// 身份前缀
+const identityPrefix = computed(() => store.identity?.identityPrefix || getIdentityPrefix())
+const identityRole = computed(() => store.identity?.role || getIdentityRole())
+
+// 页面标题根据角色变化
+const pageTitle = computed(() => {
+  switch (identityRole.value) {
+    case 'designer': return '我的设计需求'
+    case 'design_assistant': return '待处理需求'
+    case 'operator': return '需求概览'
+    case 'viewer': return '需求列表'
+    default: return '我的设计需求'
+  }
+})
 
 const requirements = ref<RequirementListItem[]>([])
 const loading = ref(false)
@@ -62,8 +77,13 @@ function getStatusClass(status: string) {
 <template>
   <div class="design-requirement-list page-container">
     <header class="header">
-      <h1>我的设计需求</h1>
-      <button @click="router.push('/plugins/ai-design-assistant/create')" class="btn btn-primary">
+      <div class="header-title-row">
+        <h1>{{ pageTitle }}</h1>
+        <span v-if="identityPrefix" class="identity-prefix-tag">
+          {{ identityPrefix }}
+        </span>
+      </div>
+      <button v-if="identityRole === 'designer'" @click="router.push('/plugins/ai-design-assistant/create')" class="btn btn-primary">
         + 创建新需求
       </button>
     </header>
@@ -83,7 +103,7 @@ function getStatusClass(status: string) {
 
     <div v-else-if="requirements.length === 0" class="empty">
       <p>暂无需求</p>
-      <button @click="router.push('/plugins/ai-design-assistant/create')" class="btn btn-secondary">
+      <button v-if="identityRole === 'designer'" @click="router.push('/plugins/ai-design-assistant/create')" class="btn btn-secondary">
         创建第一个需求
       </button>
     </div>
@@ -123,6 +143,25 @@ function getStatusClass(status: string) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.identity-prefix-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  background: #eef2ff;
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #4338ca;
+  font-weight: 500;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
 }
 
 .header h1 {

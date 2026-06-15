@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { generateUUID } from "../utils/uuid";
 
 interface LoginData {
   access_token: string;
@@ -49,7 +50,7 @@ export const useAdminAuthStore = defineStore("admin-auth", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Request-Id": crypto.randomUUID(),
+          "X-Request-Id": generateUUID(),
         },
         body: JSON.stringify({
           mobile,
@@ -79,7 +80,7 @@ export const useAdminAuthStore = defineStore("admin-auth", {
         method: "GET",
         headers: {
           "X-Tenant-Id": this.tenantId,
-          "X-Request-Id": crypto.randomUUID(),
+          "X-Request-Id": generateUUID(),
           Authorization: `Bearer ${this.accessToken}`,
         },
       });

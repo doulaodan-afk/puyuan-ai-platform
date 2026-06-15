@@ -120,16 +120,30 @@ export interface WxPrepayResponse {
     }, { showLoading: true });
   },
 
-  // 获取充值套餐
+  // 获取充值套餐（根据后端定价配置动态生成）
   async getPackages(): Promise<RechargePackage[]> {
-    // Mock 数据，实际应从后端获取
-    return [
-      { id: 'pkg_100', name: '体验包', amount: 9.9, tokenGrant: 100 },
-      { id: 'pkg_500', name: '标准包', amount: 49, tokenGrant: 500 },
-      { id: 'pkg_1000', name: '专业包', amount: 99, tokenGrant: 1000, bonus: 100, recommended: true },
-      { id: 'pkg_5000', name: '企业包', amount: 499, tokenGrant: 5000, bonus: 1000 },
-      { id: 'pkg_10000', name: '尊享包', amount: 999, tokenGrant: 10000, bonus: 3000 }
-    ];
+    try {
+      // 从后端获取定价配置（含兑换率）
+      const pricing: { token_ratio: number } = await http.get('/api/v1/account/pricing', {}, { showLoading: false });
+      const ratio = pricing?.token_ratio || 10; // 默认 1:10
+      return [
+        { id: 'pkg_10', name: '体验包', amount: 9.9, tokenGrant: Math.round(9.9 * ratio) },
+        { id: 'pkg_50', name: '标准包', amount: 49, tokenGrant: 49 * ratio },
+        { id: 'pkg_100', name: '专业包', amount: 99, tokenGrant: 99 * ratio, bonus: Math.round(ratio * 10), recommended: true },
+        { id: 'pkg_500', name: '企业包', amount: 499, tokenGrant: 499 * ratio, bonus: Math.round(ratio * 50) },
+        { id: 'pkg_1000', name: '尊享包', amount: 999, tokenGrant: 999 * ratio, bonus: Math.round(ratio * 100) }
+      ];
+    } catch (error) {
+      console.error('获取定价配置失败，使用默认兑换率 1:10:', error);
+      const ratio = 10;
+      return [
+        { id: 'pkg_10', name: '体验包', amount: 9.9, tokenGrant: Math.round(9.9 * ratio) },
+        { id: 'pkg_50', name: '标准包', amount: 49, tokenGrant: 49 * ratio },
+        { id: 'pkg_100', name: '专业包', amount: 99, tokenGrant: 99 * ratio, bonus: Math.round(ratio * 10), recommended: true },
+        { id: 'pkg_500', name: '企业包', amount: 499, tokenGrant: 499 * ratio, bonus: Math.round(ratio * 50) },
+        { id: 'pkg_1000', name: '尊享包', amount: 999, tokenGrant: 999 * ratio, bonus: Math.round(ratio * 100) }
+      ];
+    }
   },
 
   // 创建充值订单

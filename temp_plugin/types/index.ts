@@ -55,6 +55,7 @@ export interface RequirementDetail {
   tenantId: number
   creatorId: number
   title: string
+  identityPrefix?: string  // 身份前缀：工作室名称-角色
   rawImages: string[]
   rawVideos: string[]
   rawAudioUrl: string | null

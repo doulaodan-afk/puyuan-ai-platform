@@ -63,7 +63,8 @@ public final class ApiModels {
             @JsonProperty("expires_in") long expiresIn,
             @JsonProperty("user_id") long userId,
             @JsonProperty("tenant_id") long tenantId,
-            @JsonProperty("role_code") String roleCode
+            @JsonProperty("role_code") String roleCode,
+            @JsonProperty("tenants") List<TenantDtos.UserTenant> tenants
     ) {}
 
     public record ProfileResponse(
@@ -71,6 +72,7 @@ public final class ApiModels {
             @JsonProperty("tenant_code") String tenantCode,
             @JsonProperty("tenant_name") String tenantName,
             @JsonProperty("tenant_status") int tenantStatus,
+            @JsonProperty("logo_url") String logoUrl,
             @JsonProperty("user_id") long userId,
             @JsonProperty("role_code") String roleCode
     ) {}
@@ -204,10 +206,9 @@ public final class ApiModels {
     ) {}
 
     public record PricingConfigResponse(
-            @JsonProperty("token_price_per_1k") BigDecimal tokenPricePer1k,
-            @JsonProperty("storage_price_per_gb_month") BigDecimal storagePricePerGbMonth,
-            @JsonProperty("free_token_quota_month") long freeTokenQuotaMonth,
-            @JsonProperty("free_storage_quota_gb") double freeStorageQuotaGb
+            @JsonProperty("register_bonus_token") long registerBonusToken,
+            @JsonProperty("token_ratio") int tokenRatio,
+            @JsonProperty("cash_per_token") java.math.BigDecimal cashPerToken
     ) {}
 
     public record BillingDashboardResponse(

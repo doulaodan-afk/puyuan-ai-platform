@@ -390,6 +390,14 @@ public class AiDesignAssistantPluginServiceImpl implements AiDesignAssistantPlug
     }
 
     @Override
+    public long getUnreadCount(Long userId) {
+        return messages.values().stream()
+                .filter(m -> m.getReceiverId().equals(userId))
+                .filter(m -> !Boolean.TRUE.equals(m.getIsRead()))
+                .count();
+    }
+
+    @Override
     public void deleteMessage(Long id) {
         messages.remove(id);
     }

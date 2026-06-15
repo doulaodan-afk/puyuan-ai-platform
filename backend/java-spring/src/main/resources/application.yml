@@ -28,6 +28,9 @@ spring:
     force: true
     force-request: true
     force-response: true
+  # Flyway 数据库迁移（默认关闭，按环境启用）
+  flyway:
+    enabled: false
 
 management:
   endpoints:
@@ -36,6 +39,8 @@ management:
         include: health,info
 
 app:
+  ai:
+    mock-enabled: true
   security:
     enable-auth-check: false
     jwt-secret: ${JWT_SECRET:puyuanmaoshan-default-jwt-secret-change-in-production}

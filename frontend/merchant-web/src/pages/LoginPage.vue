@@ -24,6 +24,7 @@
 
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     </section>
+
   </div>
 </template>
 
@@ -31,10 +32,17 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
+import { generateUUID } from "../utils/uuid";
 
 interface LoginData {
   access_token: string;
   tenant_id: number;
+  tenants?: Array<{
+    tenantId?: number; tenant_id?: number;
+    tenantName?: string; tenant_name?: string;
+    tenantCode?: string; tenant_code?: string;
+    role?: string; role_code?: string;
+  }>;
 }
 
 interface LoginApiResponse {
@@ -74,8 +82,11 @@ async function sendSmsCode() {
   try {
     const response = await fetch(`/api/v1/sms/send-login-code?mobile=${encodeURIComponent(mobile.value)}`, {
       method: "POST",
-      headers: { "X-Request-Id": crypto.randomUUID() },
+      headers: { "X-Request-Id": generateUUID() },
     });
+    if (!response.ok) {
+      throw new Error(`发送验证码失败 (HTTP ${response.status})`);
+    }
     const payload = await response.json();
     if (payload.code !== 0) {
       throw new Error(payload.message || "发送验证码失败");
@@ -98,7 +109,7 @@ async function submitLogin() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Request-Id": crypto.randomUUID(),
+        "X-Request-Id": generateUUID(),
       },
       body: JSON.stringify({
         mobile: mobile.value,
@@ -118,6 +129,13 @@ async function submitLogin() {
     auth.setAccessToken(payload.data.access_token);
     auth.setTenantId(String(payload.data.tenant_id));
     await auth.loadProfile();
+    // 加载工作室列表（供后续插件使用，不影响登录流程）
+    if (payload.data.tenants && payload.data.tenants.length > 0) {
+      auth.setTenants(payload.data.tenants);
+    } else {
+      await auth.loadTenants();
+    }
+
     await router.replace(resolveRedirect());
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "登录失败";

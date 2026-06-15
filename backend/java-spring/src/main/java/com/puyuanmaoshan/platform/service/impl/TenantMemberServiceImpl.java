@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.puyuanmaoshan.platform.dto.TenantDtos;
 import com.puyuanmaoshan.platform.dto.UserDtos;
+import com.puyuanmaoshan.platform.entity.AccountWallet;
 import com.puyuanmaoshan.platform.entity.MemberRoleAuditLog;
 import com.puyuanmaoshan.platform.entity.Tenant;
 import com.puyuanmaoshan.platform.entity.TenantRoleConfig;
@@ -13,12 +14,14 @@ import com.puyuanmaoshan.platform.entity.TenantUser;
 import com.puyuanmaoshan.platform.entity.UserAccount;
 import com.puyuanmaoshan.platform.enums.ErrorCode;
 import com.puyuanmaoshan.platform.exception.AppException;
+import com.puyuanmaoshan.platform.mapper.AccountWalletMapper;
 import com.puyuanmaoshan.platform.mapper.MemberRoleAuditLogMapper;
 import com.puyuanmaoshan.platform.mapper.TenantMapper;
 import com.puyuanmaoshan.platform.mapper.TenantRoleConfigMapper;
 import com.puyuanmaoshan.platform.mapper.TenantUserMapper;
 import com.puyuanmaoshan.platform.mapper.UserAccountMapper;
 import com.puyuanmaoshan.platform.service.MessageService;
+import com.puyuanmaoshan.platform.service.PricingConfigService;
 import com.puyuanmaoshan.platform.service.TenantMemberService;
 import com.puyuanmaoshan.platform.service.UserProfileService;
 import org.slf4j.Logger;
@@ -27,9 +30,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -40,10 +45,12 @@ public class TenantMemberServiceImpl implements TenantMemberService {
     private final TenantUserMapper tenantUserMapper;
     private final UserAccountMapper userAccountMapper;
     private final TenantMapper tenantMapper;
+    private final AccountWalletMapper accountWalletMapper;
     private final MessageService messageService;
     private final MemberRoleAuditLogMapper memberRoleAuditLogMapper;
     private final TenantRoleConfigMapper tenantRoleConfigMapper;
     private final UserProfileService userProfileService;
+    private final PricingConfigService pricingConfigService;
     private final ObjectMapper objectMapper;
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
@@ -52,18 +59,22 @@ public class TenantMemberServiceImpl implements TenantMemberService {
     public TenantMemberServiceImpl(TenantUserMapper tenantUserMapper,
                                    UserAccountMapper userAccountMapper,
                                    TenantMapper tenantMapper,
+                                   AccountWalletMapper accountWalletMapper,
                                    MessageService messageService,
                                    MemberRoleAuditLogMapper memberRoleAuditLogMapper,
                                    TenantRoleConfigMapper tenantRoleConfigMapper,
                                    UserProfileService userProfileService,
+                                   PricingConfigService pricingConfigService,
                                    ObjectMapper objectMapper) {
         this.tenantUserMapper = tenantUserMapper;
         this.userAccountMapper = userAccountMapper;
         this.tenantMapper = tenantMapper;
+        this.accountWalletMapper = accountWalletMapper;
         this.messageService = messageService;
         this.memberRoleAuditLogMapper = memberRoleAuditLogMapper;
         this.tenantRoleConfigMapper = tenantRoleConfigMapper;
         this.userProfileService = userProfileService;
+        this.pricingConfigService = pricingConfigService;
         this.objectMapper = objectMapper;
     }
 
@@ -145,6 +156,14 @@ public class TenantMemberServiceImpl implements TenantMemberService {
                     .build();
 
             tenantUserMapper.insert(tenantUser);
+
+            // 如果被邀请用户的 primary tenant_id 为 0（新用户），设为当前工作室
+            if (user.getTenantId() == null || user.getTenantId() <= 0) {
+                user.setTenantId(tenantId);
+                user.setUpdatedAt(LocalDateTime.now());
+                userAccountMapper.updateById(user);
+                logger.info("Updated invited user {} primary tenant_id to {}", userId, tenantId);
+            }
 
             // 发送通知
             UserAccount inviter = userAccountMapper.selectById(inviterId);
@@ -520,6 +539,9 @@ public class TenantMemberServiceImpl implements TenantMemberService {
             throw new AppException(ErrorCode.FORBIDDEN, "您不在此租户中");
         }
 
+        logger.info("removeMemberV2: operatorId={}, tenantId={}, operatorRole={}, isBoss={}, isAdmin={}",
+                operatorId, tenantId, operatorTu.getRole(), operatorTu.isBoss(), isAdmin(operatorTu.getRole()));
+
         // 不能移除自己
         if (operatorId.equals(memberUserId)) {
             throw new AppException(ErrorCode.BUSINESS_ERROR, "不能移除自己");
@@ -527,7 +549,8 @@ public class TenantMemberServiceImpl implements TenantMemberService {
 
         // 验证权限
         if (!operatorTu.isBoss() && !isAdmin(operatorTu.getRole())) {
-            throw new AppException(ErrorCode.FORBIDDEN, "只有老板或管理员可以移除成员");
+            throw new AppException(ErrorCode.FORBIDDEN, 
+                    "只有老板或管理员可以移除成员（当前角色：" + operatorTu.getRole() + "）");
         }
 
         TenantUser targetTu = tenantUserMapper.selectByUserIdAndTenantId(memberUserId, tenantId);
@@ -747,6 +770,150 @@ public class TenantMemberServiceImpl implements TenantMemberService {
     }
 
     private boolean isAdmin(String roleCode) {
-        return "tenant_admin".equals(roleCode) || "boss".equals(roleCode);
+        return "tenant_admin".equals(roleCode) || "boss".equals(roleCode) || "merchant_owner".equals(roleCode) || "platform_super_admin".equals(roleCode);
+    }
+
+    /**
+     * 生成租户编码
+     */
+    private String generateTenantCode() {
+        return "T" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TenantDtos.CreateTenantResponse createTenant(Long userId, String tenantName) {
+        try {
+            // 1. 获取用户信息
+            UserAccount user = userAccountMapper.selectById(userId);
+            if (user == null) {
+                throw new AppException(ErrorCode.NOT_FOUND, "用户不存在");
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+
+            // 2. 创建租户
+            Tenant tenant = Tenant.builder()
+                    .tenantCode(generateTenantCode())
+                    .name(tenantName)
+                    .status(1)
+                    .level("free")
+                    .tenantType("individual")
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
+
+            tenantMapper.insert(tenant);
+            Long tenantId = tenant.getId();
+
+            // 3. 创建租户-用户关联（创建者为 boss）
+            TenantUser tenantUser = TenantUser.builder()
+                    .tenantId(tenantId)
+                    .userId(userId)
+                    .role("boss")
+                    .invitedBy(userId)
+                    .status(TenantUser.Status.ACTIVE.getCode())
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
+
+            tenantUserMapper.insert(tenantUser);
+
+            // 3.5. 更新创建者的 primary tenant_id 为新工作室（确保重新登录时默认显示新工作室）
+            user.setTenantId(tenantId);
+            user.setUpdatedAt(now);
+            userAccountMapper.updateById(user);
+
+            // 4. 创建账户钱包（默认赠送 10 Token，通过 PricingConfigService 获取）
+            AccountWallet wallet = AccountWallet.builder()
+                    .tenantId(tenantId)
+                    .tokenBalance(pricingConfigService.getRegisterBonusToken())
+                    .cashBalance(BigDecimal.ZERO)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
+
+            accountWalletMapper.insert(wallet);
+
+            // 5. 记录审计日志
+            recordAuditLog(tenantId, userId, userId,
+                    MemberRoleAuditLog.Action.INVITE,
+                    null, "boss",
+                    null, TenantUser.Status.ACTIVE.getCode(),
+                    "创建工作室");
+
+            logger.info("用户 {} 创建了新工作室: {} (tenantId={})", userId, tenantName, tenantId);
+
+            return new TenantDtos.CreateTenantResponse(
+                    tenantId,
+                    tenant.getName(),
+                    tenant.getTenantCode(),
+                    "boss"
+            );
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("创建工作室失败", e);
+            throw new AppException(ErrorCode.INTERNAL_ERROR, "创建工作室失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TenantDtos.CommonResponse deleteTenant(Long userId, Long tenantId) {
+        try {
+            // 1. 验证租户存在
+            Tenant tenant = tenantMapper.selectById(tenantId);
+            if (tenant == null) {
+                return TenantDtos.ResponseHelper.error("工作室不存在");
+            }
+
+            // 2. 验证操作者是该租户的 boss
+            TenantUser tenantUser = tenantUserMapper.selectByUserIdAndTenantId(userId, tenantId);
+            if (tenantUser == null || !tenantUser.isBoss()) {
+                return TenantDtos.ResponseHelper.error("只有管理员可以删除工作室");
+            }
+
+            // 3. 软删除：将租户状态设为 0（冻结/已删除）
+            tenant.setStatus(0);
+            tenant.setUpdatedAt(LocalDateTime.now());
+            tenantMapper.updateById(tenant);
+
+            // 4. 将该租户下所有成员设为 inactive
+            List<TenantUser> members = tenantUserMapper.selectActiveMembersByTenantId(tenantId);
+            for (TenantUser member : members) {
+                member.setStatus(TenantUser.Status.INACTIVE.getCode());
+                member.setUpdatedAt(LocalDateTime.now());
+                tenantUserMapper.updateById(member);
+            }
+
+            // 5. 如果被删除的租户是某用户的 primary tenant，切换到其另一个租户
+            for (TenantUser member : members) {
+                UserAccount user = userAccountMapper.selectById(member.getUserId());
+                if (user != null && user.getTenantId() != null && user.getTenantId().equals(tenantId)) {
+                    List<TenantUser> otherTenants = tenantUserMapper.selectActiveTenantsByUserId(member.getUserId());
+                    Long newTenantId = otherTenants.isEmpty() ? 0L : otherTenants.get(0).getTenantId();
+                    user.setTenantId(newTenantId);
+                    user.setUpdatedAt(LocalDateTime.now());
+                    userAccountMapper.updateById(user);
+                }
+            }
+
+            // 6. 记录审计日志
+            recordAuditLog(tenantId, userId, userId,
+                    MemberRoleAuditLog.Action.REMOVE_MEMBER,
+                    "boss", null,
+                    TenantUser.Status.ACTIVE.getCode(), TenantUser.Status.INACTIVE.getCode(),
+                    "删除工作室");
+
+            logger.info("用户 {} 删除了工作室: {} (tenantId={})", userId, tenant.getName(), tenantId);
+
+            return TenantDtos.ResponseHelper.success("工作室已删除");
+
+        } catch (Exception e) {
+            logger.error("删除工作室失败", e);
+            throw new AppException(ErrorCode.INTERNAL_ERROR, "删除工作室失败: " + e.getMessage());
+        }
     }
 }

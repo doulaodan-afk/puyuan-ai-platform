@@ -18,6 +18,41 @@ public class AiDesignAssistantPluginController {
     @Autowired
     private AiDesignAssistantPluginService service;
 
+    /**
+     * 从请求头解析身份前缀信息
+     * X-Identity-Prefix: 工作室名称-角色（如 "我的工作室-设计师"）
+     * X-Identity-Role: 角色代码（如 "designer"）
+     * X-Identity-Tenant-Id: 身份对应的租户ID
+     */
+    private IdentityContext resolveIdentity(
+            @RequestHeader(value = "X-Identity-Prefix", required = false) String identityPrefix,
+            @RequestHeader(value = "X-Identity-Role", required = false) String identityRole,
+            @RequestHeader(value = "X-Identity-Tenant-Id", required = false) String identityTenantId) {
+        IdentityContext ctx = new IdentityContext();
+        ctx.identityPrefix = identityPrefix;
+        ctx.identityRole = identityRole;
+        ctx.identityTenantId = identityTenantId;
+        return ctx;
+    }
+
+    /** 身份上下文内部类 */
+    private static class IdentityContext {
+        String identityPrefix;
+        String identityRole;
+        String identityTenantId;
+
+        Long getEffectiveTenantId(Long fallback) {
+            if (identityTenantId != null && !identityTenantId.isEmpty()) {
+                try {
+                    return Long.parseLong(identityTenantId);
+                } catch (NumberFormatException e) {
+                    // fall through to fallback
+                }
+            }
+            return fallback;
+        }
+    }
+
     // ========== Requirement APIs ==========
 
     @GetMapping("/requirements")
@@ -25,8 +60,14 @@ public class AiDesignAssistantPluginController {
             @RequestParam(required = false) Long tenantId,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
-        return service.listRequirements(tenantId, status, page, size);
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestHeader(value = "X-Identity-Prefix", required = false) String identityPrefix,
+            @RequestHeader(value = "X-Identity-Role", required = false) String identityRole,
+            @RequestHeader(value = "X-Identity-Tenant-Id", required = false) String identityTenantId) {
+        IdentityContext ctx = resolveIdentity(identityPrefix, identityRole, identityTenantId);
+        // 优先使用身份选择的 tenantId
+        Long effectiveTenantId = ctx.getEffectiveTenantId(tenantId);
+        return service.listRequirements(effectiveTenantId, status, page, size);
     }
 
     @GetMapping("/requirements/{id}")
@@ -36,9 +77,14 @@ public class AiDesignAssistantPluginController {
 
     @PostMapping("/requirements")
     public Requirement createRequirement(@RequestBody RequirementCreateRequest request,
-                                        @RequestParam Long tenantId,
-                                        @RequestParam Long creatorId) {
-        return service.createRequirement(request, tenantId, creatorId);
+                                        @RequestParam(required = false) Long tenantId,
+                                        @RequestParam(required = false) Long creatorId,
+                                        @RequestHeader(value = "X-Identity-Prefix", required = false) String identityPrefix,
+                                        @RequestHeader(value = "X-Identity-Role", required = false) String identityRole,
+                                        @RequestHeader(value = "X-Identity-Tenant-Id", required = false) String identityTenantId) {
+        IdentityContext ctx = resolveIdentity(identityPrefix, identityRole, identityTenantId);
+        Long effectiveTenantId = ctx.getEffectiveTenantId(tenantId);
+        return service.createRequirement(request, effectiveTenantId, creatorId);
     }
 
     @PutMapping("/requirements/{id}")
@@ -127,7 +173,14 @@ public class AiDesignAssistantPluginController {
     }
 
     @PostMapping("/fabrics")
-    public Fabric createFabric(@RequestBody FabricCreateRequest request) {
+    public Fabric createFabric(@RequestBody FabricCreateRequest request,
+                               @RequestHeader(value = "X-Identity-Tenant-Id", required = false) String identityTenantId) {
+        // 面料创建时使用身份租户ID作为 supplierTenantId
+        if (identityTenantId != null && !identityTenantId.isEmpty() && request.getSupplierTenantId() == null) {
+            try {
+                request.setSupplierTenantId(Long.parseLong(identityTenantId));
+            } catch (NumberFormatException ignored) {}
+        }
         return service.createFabric(request);
     }
 
@@ -160,8 +213,13 @@ public class AiDesignAssistantPluginController {
     @PostMapping("/messages")
     public Message createMessage(@RequestBody MessageCreateRequest request,
                                 @RequestParam Long senderId,
-                                @RequestParam String senderName) {
-        return service.createMessage(request, senderId, senderName);
+                                @RequestParam String senderName,
+                                @RequestHeader(value = "X-Identity-Prefix", required = false) String identityPrefix) {
+        // 发送消息时，如果提供了身份前缀，附加到发送者名称上
+        String effectiveSenderName = identityPrefix != null && !identityPrefix.isEmpty()
+                ? "[" + identityPrefix + "] " + senderName
+                : senderName;
+        return service.createMessage(request, senderId, effectiveSenderName);
     }
 
     @PostMapping("/messages/{id}/read")
@@ -182,7 +240,16 @@ public class AiDesignAssistantPluginController {
     // ========== Statistics API ==========
 
     @GetMapping("/statistics")
-    public StatisticsResponse getStatistics(@RequestParam Long tenantId) {
-        return service.getStatistics(tenantId);
+    public StatisticsResponse getStatistics(
+            @RequestParam(required = false) Long tenantId,
+            @RequestHeader(value = "X-Identity-Tenant-Id", required = false) String identityTenantId) {
+        // 优先使用身份租户ID
+        Long effectiveTenantId = tenantId;
+        if (identityTenantId != null && !identityTenantId.isEmpty()) {
+            try {
+                effectiveTenantId = Long.parseLong(identityTenantId);
+            } catch (NumberFormatException ignored) {}
+        }
+        return service.getStatistics(effectiveTenantId);
     }
 }

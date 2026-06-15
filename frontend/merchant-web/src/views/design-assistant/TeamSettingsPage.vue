@@ -34,7 +34,7 @@
               <el-option label="设计师" value="designer" />
               <el-option label="设计助理" value="design_assistant" />
               <el-option label="版师" value="pattern_maker" />
-              <el-option label="运营" value="operator" />
+              <el-option label="面料特供商" value="operator" />
               <el-option label="查看者" value="viewer" />
             </el-select>
           </template>
@@ -83,7 +83,7 @@
             <el-option label="设计师" value="designer" />
             <el-option label="设计助理" value="design_assistant" />
             <el-option label="版师" value="pattern_maker" />
-            <el-option label="运营" value="operator" />
+            <el-option label="面料特供商" value="operator" />
             <el-option label="查看者" value="viewer" />
           </el-select>
         </el-form-item>

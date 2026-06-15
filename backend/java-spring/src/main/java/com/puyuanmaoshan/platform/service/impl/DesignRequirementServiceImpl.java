@@ -29,6 +29,8 @@ public class DesignRequirementServiceImpl implements DesignRequirementService {
 
     private final DesignRequirementMapper designRequirementMapper;
     private final DesignTaskMapper designTaskMapper;
+    private final RequirementFabricMapper requirementFabricMapper;
+    private final FabricLibraryMapper fabricLibraryMapper;
     private final AiSessionMapper aiSessionMapper;
     private final TaskAssignRuleMapper taskAssignRuleMapper;
     private final DesignAssistantAiService aiService;
@@ -38,6 +40,8 @@ public class DesignRequirementServiceImpl implements DesignRequirementService {
 
     public DesignRequirementServiceImpl(DesignRequirementMapper designRequirementMapper,
                                          DesignTaskMapper designTaskMapper,
+                                         RequirementFabricMapper requirementFabricMapper,
+                                         FabricLibraryMapper fabricLibraryMapper,
                                          AiSessionMapper aiSessionMapper,
                                          TaskAssignRuleMapper taskAssignRuleMapper,
                                          DesignAssistantAiService aiService,
@@ -46,6 +50,8 @@ public class DesignRequirementServiceImpl implements DesignRequirementService {
                                          ObjectMapper objectMapper) {
         this.designRequirementMapper = designRequirementMapper;
         this.designTaskMapper = designTaskMapper;
+        this.requirementFabricMapper = requirementFabricMapper;
+        this.fabricLibraryMapper = fabricLibraryMapper;
         this.aiSessionMapper = aiSessionMapper;
         this.taskAssignRuleMapper = taskAssignRuleMapper;
         this.aiService = aiService;
@@ -79,7 +85,25 @@ public class DesignRequirementServiceImpl implements DesignRequirementService {
             designRequirementMapper.insert(requirement);
             logger.info("Created requirement {} for tenant {}", requirement.getId(), tenantId);
 
-            // 如果选择了面料商，直接创建面料任务
+            // ====== 面料关联（新增：支持多面料多供应商） ======
+            if (request.selectedFabrics() != null && !request.selectedFabrics().isEmpty()) {
+                for (var selection : request.selectedFabrics()) {
+                    FabricLibrary fabric = fabricLibraryMapper.selectById(selection.fabricId());
+                    if (fabric != null) {
+                        RequirementFabric rf = RequirementFabric.builder()
+                                .requirementId(requirement.getId())
+                                .fabricId(selection.fabricId())
+                                .fabricSupplierId(selection.fabricSupplierId() != null
+                                        ? selection.fabricSupplierId() : fabric.getCreatorId())
+                                .quantity(selection.quantity())
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                        requirementFabricMapper.insert(rf);
+                    }
+                }
+            }
+
+            // 如果选择了面料商（旧逻辑兼容），直接创建面料任务
             if (request.selectedSupplierId() != null && request.selectedSupplierId() > 0) {
                 assignFabricTaskToSupplier(requirement.getId(), request.selectedSupplierId());
             }
@@ -436,13 +460,26 @@ public class DesignRequirementServiceImpl implements DesignRequirementService {
                 ));
             }
 
+            // 加载关联的面料列表
+            List<RequirementFabric> reqFabrics = requirementFabricMapper.selectList(
+                new LambdaQueryWrapper<RequirementFabric>()
+                    .eq(RequirementFabric::getRequirementId, requirementId)
+            );
+            List<DesignAssistantDtos.FabricInfo> linkedFabrics = new ArrayList<>();
+            for (RequirementFabric rf : reqFabrics) {
+                FabricLibrary fabric = fabricLibraryMapper.selectById(rf.getFabricId());
+                if (fabric != null) {
+                    linkedFabrics.add(toFabricInfo(fabric));
+                }
+            }
+
             return new DesignAssistantDtos.RequirementDetailResponse(
                 requirement.getId(), requirement.getTenantId(), requirement.getCreatorId(),
                 requirement.getTitle(), images, videos, requirement.getRawAudioUrl(),
                 requirement.getRawText(), history, requirement.getAiSummary(),
                 requirement.getDesignerApproved(), requirement.getAssistantId(),
                 requirement.getStatus(), requirement.getTotalTokenCost(),
-                requirement.getCreatedAt(), requirement.getUpdatedAt(), taskInfos
+                requirement.getCreatedAt(), requirement.getUpdatedAt(), taskInfos, linkedFabrics
             );
 
         } catch (Exception e) {
@@ -489,5 +526,26 @@ public class DesignRequirementServiceImpl implements DesignRequirementService {
         // 查找租户绑定的第一个助理
         // 这里简化实现，实际应该有更复杂的逻辑
         return null;
+    }
+
+    /** 将 FabricLibrary 实体转为 DTO（简化版，用于需求详情中展示关联面料） */
+    private DesignAssistantDtos.FabricInfo toFabricInfo(FabricLibrary fabric) {
+        try {
+            List<String> imgs = objectMapper.readValue(
+                    fabric.getImages() != null ? fabric.getImages() : "[]",
+                    new TypeReference<List<String>>() {});
+            Map<String, Object> sps = objectMapper.readValue(
+                    fabric.getSpecs() != null ? fabric.getSpecs() : "{}",
+                    new TypeReference<Map<String, Object>>() {});
+            return new DesignAssistantDtos.FabricInfo(
+                    fabric.getId(), fabric.getSupplierTenantId(), fabric.getName(),
+                    fabric.getCategory(), imgs, fabric.getVideoUrl(),
+                    sps, fabric.getPricePerMeter(), fabric.getStockStatus(),
+                    fabric.getIsVisible(), fabric.getCreatedAt(), fabric.getUpdatedAt(),
+                    fabric.getCreatorId(), null
+            );
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

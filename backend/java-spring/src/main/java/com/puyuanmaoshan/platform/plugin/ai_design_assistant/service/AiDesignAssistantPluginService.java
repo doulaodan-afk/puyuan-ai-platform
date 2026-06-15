@@ -43,6 +43,7 @@ public interface AiDesignAssistantPluginService {
     void markAsRead(Long id);
     void markAllAsRead(Long userId);
     void deleteMessage(Long id);
+    long getUnreadCount(Long userId);
 
     // Statistics API
     StatisticsResponse getStatistics(Long tenantId);

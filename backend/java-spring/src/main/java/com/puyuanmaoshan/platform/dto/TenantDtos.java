@@ -1,7 +1,10 @@
 package com.puyuanmaoshan.platform.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -104,5 +107,60 @@ public final class TenantDtos {
             long tenantId,
             String tenantName,
             String role
+    ) {}
+
+    // ====== 租户企业信息 ======
+
+    public record UpdateTenantProfileRequest(
+            @Size(min = 1, max = 100, message = "企业名称长度为1-100个字符")
+            @JsonProperty("name") String name,
+
+            @JsonProperty("logo_url") String logoUrl,
+
+            @Size(max = 50, message = "行业分类最长50个字符")
+            @JsonProperty("industry") String industry,
+
+            @Size(max = 20, message = "联系电话最长20个字符")
+            @JsonProperty("contact_phone") String contactPhone,
+
+            @Email(message = "邮箱格式不正确")
+            @JsonProperty("contact_email") String contactEmail,
+
+            @Size(max = 300, message = "地址最长300个字符")
+            @JsonProperty("address") String address,
+
+            @Size(max = 500, message = "简介最长500个字符")
+            @JsonProperty("description") String description
+    ) {}
+
+    public record TenantProfileDetailResponse(
+            @JsonProperty("tenant_id") long tenantId,
+            @JsonProperty("tenant_code") String tenantCode,
+            @JsonProperty("tenant_name") String tenantName,
+            @JsonProperty("tenant_status") int tenantStatus,
+            @JsonProperty("logo_url") String logoUrl,
+            @JsonProperty("industry") String industry,
+            @JsonProperty("contact_phone") String contactPhone,
+            @JsonProperty("contact_email") String contactEmail,
+            @JsonProperty("address") String address,
+            @JsonProperty("description") String description
+    ) {}
+
+    public record UploadLogoResponse(
+            @JsonProperty("url") String url
+    ) {}
+
+    // ====== 创建租户/工作室 ======
+
+    public record CreateTenantRequest(
+            @NotBlank @Size(min = 2, max = 100, message = "工作室名称长度为2-100个字符")
+            @JsonProperty("tenantName") String tenantName
+    ) {}
+
+    public record CreateTenantResponse(
+            @JsonProperty("tenantId") long tenantId,
+            @JsonProperty("tenantName") String tenantName,
+            @JsonProperty("tenantCode") String tenantCode,
+            @JsonProperty("role") String role
     ) {}
 }

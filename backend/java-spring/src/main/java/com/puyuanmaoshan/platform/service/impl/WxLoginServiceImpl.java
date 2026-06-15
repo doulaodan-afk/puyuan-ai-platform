@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.puyuanmaoshan.platform.dto.ApiModels;
 import com.puyuanmaoshan.platform.dto.WxLoginDtos;
+import com.puyuanmaoshan.platform.dto.TenantDtos;
 import com.puyuanmaoshan.platform.entity.AccountWallet;
 import com.puyuanmaoshan.platform.entity.Plugin;
 import com.puyuanmaoshan.platform.entity.Tenant;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -114,7 +116,8 @@ public class WxLoginServiceImpl implements WxLoginService {
                 7200, // 2小时
                 userId,
                 tenantId,
-                role
+                role,
+                List.of()
         );
     }
 

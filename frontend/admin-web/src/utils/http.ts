@@ -1,4 +1,5 @@
 import { useAdminAuthStore } from "../stores/adminAuth";
+import { generateUUID } from "./uuid";
 
 export interface ApiEnvelope<T> {
   code: number;
@@ -9,7 +10,7 @@ export interface ApiEnvelope<T> {
 export function buildAdminHeaders(extra?: Record<string, string>): HeadersInit {
   const auth = useAdminAuthStore();
   const headers: Record<string, string> = {
-    "X-Request-Id": crypto.randomUUID(),
+    "X-Request-Id": generateUUID(),
     ...(extra ?? {}),
   };
 

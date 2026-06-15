@@ -6,8 +6,8 @@
 
     <div class="filter-bar">
       <div class="filters">
-        <input v-model="tenantId" placeholder="tenant_id" />
-        <input v-model="action" placeholder="action" />
+        <input v-model="tenantId" placeholder="租户ID" />
+        <input v-model="action" placeholder="操作类型" />
         <button @click="reloadFirstPage" :disabled="loading">{{ loading ? "加载中..." : "查询" }}</button>
       </div>
     </div>
@@ -18,11 +18,11 @@
       <thead>
         <tr>
           <th>ID</th>
-          <th>tenant_id</th>
-          <th>action</th>
-          <th>target</th>
-          <th>detail_json</th>
-          <th>created_at</th>
+          <th>租户ID</th>
+          <th>操作类型</th>
+          <th>操作对象</th>
+          <th>变更明细</th>
+          <th>操作时间</th>
         </tr>
       </thead>
       <tbody>

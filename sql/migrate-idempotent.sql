@@ -255,7 +255,7 @@ CREATE TABLE IF NOT EXISTS `tenant_role_config` (
 INSERT INTO `tenant_role_config` (`role_code`, `role_name`, `description`, `permissions`, `sort_order`, `is_system`) VALUES
 ('boss', 'Boss', 'Studio owner with all permissions', '["*"]', 1, 1),
 ('tenant_admin', 'Admin', 'Can manage members and access all features', '["member_manage","plugin_invoke","billing_view","settings_view"]', 2, 1),
-('tenant_operator', 'Operator', 'Can invoke AI plugins and view billing', '["plugin_invoke","billing_view"]', 3, 1),
+('tenant_operator', '面料特供商', '与工作室深度合作的特别供应商，可调用AI插件和查看账单', '["plugin_invoke","billing_view","fabric_manage"]', 3, 1),
 ('tenant_viewer', 'Viewer', 'Read-only access', '["billing_view"]', 4, 1)
 ON DUPLICATE KEY UPDATE
 `role_name` = VALUES(`role_name`),

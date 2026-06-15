@@ -186,14 +186,15 @@ import { ref, reactive, onMounted } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { Check, Close, Lock, Phone, Message } from '@element-plus/icons-vue';
 import { useAuthStore } from '../stores/auth';
+import { generateUUID } from '../utils/uuid';
 
-const defaultAvatar = '/logo/小LOGO.png';
+const defaultAvatar = '/logo/small-logo.png';
 const activeTab = ref('basic');
 
 function getAuthHeaders(): Record<string, string> {
   const auth = useAuthStore();
   return {
-    'X-Request-Id': crypto.randomUUID(),
+    'X-Request-Id': generateUUID(),
     'X-Tenant-Id': auth.tenantId,
     'Authorization': `Bearer ${auth.accessToken}`
   };

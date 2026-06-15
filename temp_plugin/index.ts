@@ -4,7 +4,7 @@
 import type { App } from 'vue'
 import type { Pinia } from 'pinia'
 import type { Router } from 'vue-router'
-import { pluginRoutes } from './router'
+import { pluginRoutes, installIdentityGuard } from './router'
 import { useDesignAssistantStore } from './stores'
 
 // 插件配置
@@ -42,6 +42,9 @@ export function install(
   pluginRoutes.forEach(route => {
     router.addRoute(route as any)
   })
+
+  // 安装身份选择守卫 - 进入插件前必须选择身份
+  installIdentityGuard(router)
 
   console.log('[AI Design Assistant] Plugin installed successfully')
 }

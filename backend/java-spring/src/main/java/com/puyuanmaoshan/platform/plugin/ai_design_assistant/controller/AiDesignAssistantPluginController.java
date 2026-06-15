@@ -174,6 +174,11 @@ public class AiDesignAssistantPluginController {
         service.markAllAsRead(userId);
     }
 
+    @GetMapping("/messages/count/unread")
+    public long getUnreadCount(@RequestParam Long userId) {
+        return service.getUnreadCount(userId);
+    }
+
     @DeleteMapping("/messages/{id}")
     public void deleteMessage(@PathVariable Long id) {
         service.deleteMessage(id);

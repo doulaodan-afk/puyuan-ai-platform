@@ -113,6 +113,10 @@ const recentDebits = computed(() => ledgerItems.value.filter((item) => item.entr
 function openPlugin(pluginId: string) {
   const routePath = PLUGIN_ROUTES[pluginId];
   if (routePath) {
+    // 进入插件前清除身份标记，强制重新选择工作室
+    localStorage.removeItem('ai_design_role');
+    localStorage.removeItem('ai_design_tenant_id');
+    localStorage.removeItem('ai_design_identity_prefix');
     router.push(routePath);
   } else {
     console.log("打开插件:", pluginId);

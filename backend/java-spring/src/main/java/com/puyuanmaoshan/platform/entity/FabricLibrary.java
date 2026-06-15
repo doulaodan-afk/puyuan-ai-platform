@@ -25,6 +25,14 @@ public class FabricLibrary {
     @TableField("supplier_tenant_id")
     private Long supplierTenantId;
 
+    /** 所属商家租户ID（面料特供商所在的工作室） */
+    @TableField("tenant_id")
+    private Long tenantId;
+
+    /** 上传者用户ID（面料特供商本人） */
+    @TableField("creator_id")
+    private Long creatorId;
+
     @TableField("name")
     private String name;
 

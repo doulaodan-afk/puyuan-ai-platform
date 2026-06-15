@@ -6,13 +6,14 @@
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="false"
+    class="tenant-selection-dialog"
   >
     <div class="tenant-selection">
       <p class="hint">您加入了多个工作室，请选择当前要使用的：</p>
 
       <div class="tenant-list">
         <div
-          v-for="tenant in userStore.tenants"
+          v-for="tenant in auth.tenants"
           :key="tenant.tenantId"
           :class="['tenant-item', { selected: selectedTenantId === tenant.tenantId }]"
           @click="selectTenant(tenant.tenantId)"
@@ -20,15 +21,38 @@
           <div class="tenant-icon">🏢</div>
           <div class="tenant-info">
             <div class="tenant-name">{{ tenant.tenantName }}</div>
-            <div class="tenant-role">{{ getRoleName(tenant.role) }}</div>
+            <div class="tenant-role">{{ getRoleLabel(tenant.role) }}</div>
           </div>
           <div v-if="selectedTenantId === tenant.tenantId" class="check-icon">✓</div>
+        </div>
+      </div>
+
+      <div class="create-section">
+        <button v-if="!showCreateForm" class="create-btn" @click="showCreateForm = true">
+          + 创建新工作室
+        </button>
+        <div v-if="showCreateForm" class="create-form">
+          <input
+            v-model="newStudioName"
+            type="text"
+            placeholder="请输入工作室名称（至少2个字）"
+            :disabled="creating"
+            @keyup.enter="handleCreateTenant"
+          />
+          <p v-if="createError" class="field-error">{{ createError }}</p>
+          <p v-if="createSuccess" class="field-success">{{ createSuccess }}</p>
+          <div class="form-actions">
+            <button class="cancel-btn" @click="cancelCreate" :disabled="creating">取消</button>
+            <button class="confirm-btn" :disabled="!canCreate || creating" @click="handleCreateTenant">
+              {{ creating ? '创建中...' : '确认创建' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
     <template #footer>
-      <el-button type="primary" @click="confirm" :disabled="!selectedTenantId">
+      <el-button type="primary" @click="confirm" :disabled="!selectedTenantId" :loading="switching">
         进入工作室
       </el-button>
     </template>
@@ -36,69 +60,82 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useAuthStore } from '../stores/auth'
+import { ref, computed } from 'vue'
+import { useAuthStore, getRoleLabel } from '../stores/auth'
 
-const userStore = useAuthStore()
+const emit = defineEmits<{
+  confirmed: [tenantId: number]
+}>()
+
+const auth = useAuthStore()
 
 const visible = ref(false)
 const selectedTenantId = ref<number>(0)
-const emit = defineEmits(['confirmed'])
-
-const roleNames: Record<string, string> = {
-  boss: '老板',
-  designer: '设计师',
-  design_assistant: '设计助理',
-  pattern_maker: '版师',
-  operator: '运营',
-  viewer: '查看者',
-}
-
-function getRoleName(role: string): string {
-  return roleNames[role] || role
-}
+const switching = ref(false)
+const showCreateForm = ref(false)
+const creating = ref(false)
+const newStudioName = ref('')
+const createError = ref('')
+const createSuccess = ref('')
+const canCreate = computed(() => newStudioName.value.trim().length >= 2 && !creating.value)
 
 function selectTenant(tenantId: number) {
   selectedTenantId.value = tenantId
 }
 
-function confirm() {
-  if (selectedTenantId.value) {
-    userStore.switchTenant(selectedTenantId.value)
-    visible.value = false
-    emit('confirmed', selectedTenantId.value)
+async function confirm() {
+  if (!selectedTenantId.value) return
+  switching.value = true
+  try {
+    const result = await auth.switchTenant(selectedTenantId.value)
+    if (result.success) {
+      visible.value = false
+      emit('confirmed', selectedTenantId.value)
+    } else {
+      createError.value = result.message || '切换失败'
+    }
+  } finally {
+    switching.value = false
   }
+}
+
+async function handleCreateTenant() {
+  if (!canCreate.value) return
+  creating.value = true
+  createError.value = ''
+  createSuccess.value = ''
+  try {
+    const result = await auth.createTenant(newStudioName.value.trim())
+    if (result.success) {
+      createSuccess.value = '工作室创建成功！'
+      selectedTenantId.value = result.data!.tenantId
+      setTimeout(() => confirm(), 500)
+    } else {
+      createError.value = result.message || '创建失败'
+    }
+  } catch (e) {
+    console.error('创建工作室失败', e)
+    createError.value = '创建工作室失败'
+  } finally {
+    creating.value = false
+  }
+}
+
+function cancelCreate() {
+  showCreateForm.value = false
+  newStudioName.value = ''
+  createError.value = ''
 }
 
 function show() {
-  // 如果只有一个租户，直接确认
-  if (userStore.tenants.length === 1) {
-    selectedTenantId.value = userStore.tenants[0].tenantId
-    userStore.switchTenant(selectedTenantId.value)
-    emit('confirmed', selectedTenantId.value)
+  if (auth.tenants.length === 1) {
+    selectedTenantId.value = auth.tenants[0].tenantId
+    confirm()
     return
   }
-
-  // 如果之前选择过，使用上次的选择
-  if (userStore.currentTenantId) {
-    selectedTenantId.value = userStore.currentTenantId
-  } else if (userStore.tenants.length > 0) {
-    selectedTenantId.value = userStore.tenants[0].tenantId
-  }
-
+  selectedTenantId.value = auth.currentTenantId || (auth.tenants[0]?.tenantId ?? 0)
   visible.value = true
 }
-
-// 监听租户列表变化，自动显示选择对话框
-watch(
-  () => userStore.tenants.length,
-  (newLength) => {
-    if (newLength > 0) {
-      show()
-    }
-  },
-  { immediate: true }
-)
 
 defineExpose({ show })
 </script>
@@ -109,9 +146,10 @@ defineExpose({ show })
 }
 
 .hint {
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin-bottom: 20px;
   text-align: center;
+  font-size: 14px;
 }
 
 .tenant-list {
@@ -125,20 +163,20 @@ defineExpose({ show })
   align-items: center;
   gap: 16px;
   padding: 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  border: 2px solid hsl(var(--border));
+  border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tenant-item:hover {
-  border-color: #3b82f6;
-  background: #f8fafc;
+  border-color: hsl(var(--primary) / 0.3);
+  background: hsl(var(--accent));
 }
 
 .tenant-item.selected {
-  border-color: #10a37f;
-  background: #ecfdf5;
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.08);
 }
 
 .tenant-icon {
@@ -151,18 +189,111 @@ defineExpose({ show })
 
 .tenant-name {
   font-weight: 600;
-  color: #1f2937;
+  color: hsl(var(--foreground));
   margin-bottom: 4px;
 }
 
 .tenant-role {
   font-size: 14px;
-  color: #6b7280;
+  color: hsl(var(--muted-foreground));
 }
 
 .check-icon {
   font-size: 24px;
-  color: #10a37f;
+  color: hsl(var(--primary));
   font-weight: bold;
+}
+
+.create-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed hsl(var(--border));
+}
+
+.create-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px dashed hsl(var(--border));
+  border-radius: var(--radius);
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.create-btn:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.05);
+}
+
+.create-form {
+  margin-top: 8px;
+  padding: 12px;
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+}
+
+.create-form input {
+  width: 100%;
+  padding: 8px 10px;
+  background: hsl(var(--input));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  font-size: 14px;
+  color: hsl(var(--foreground));
+}
+
+.create-form input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.create-form input:focus {
+  border-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background: hsl(var(--secondary));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.confirm-btn {
+  padding: 8px 16px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.field-error {
+  font-size: 13px;
+  color: hsl(var(--destructive));
+  margin-top: 6px;
+}
+
+.field-success {
+  font-size: 13px;
+  color: hsl(160 84% 40%);
+  margin-top: 6px;
 }
 </style>

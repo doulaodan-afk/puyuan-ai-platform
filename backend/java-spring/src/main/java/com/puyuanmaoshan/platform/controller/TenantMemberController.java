@@ -3,6 +3,8 @@ package com.puyuanmaoshan.platform.controller;
 import com.puyuanmaoshan.platform.dto.ApiResponse;
 import com.puyuanmaoshan.platform.dto.TenantDtos;
 import com.puyuanmaoshan.platform.dto.UserDtos;
+import com.puyuanmaoshan.platform.entity.Tenant;
+import com.puyuanmaoshan.platform.mapper.TenantMapper;
 import com.puyuanmaoshan.platform.service.TenantMemberService;
 import com.puyuanmaoshan.platform.util.RequestContextUtil;
 import com.puyuanmaoshan.platform.enums.ErrorCode;
@@ -18,9 +20,11 @@ import java.util.List;
 @RequestMapping("/api/tenant")
 public class TenantMemberController {
     private final TenantMemberService tenantMemberService;
+    private final TenantMapper tenantMapper;
 
-    public TenantMemberController(TenantMemberService tenantMemberService) {
+    public TenantMemberController(TenantMemberService tenantMemberService, TenantMapper tenantMapper) {
         this.tenantMemberService = tenantMemberService;
+        this.tenantMapper = tenantMapper;
     }
 
     /**
@@ -73,61 +77,24 @@ public class TenantMemberController {
     }
 
     /**
-     * 修改成员角色
-     * PUT /api/tenant/members/{userId}/role
+     * 创建新工作室/租户
+     * POST /api/tenant/create
      */
-    @PutMapping("/members/{userId}/role")
-    public ApiResponse<Object> updateMemberRole(
-            @PathVariable("userId") Long targetUserId,
-            @RequestHeader("X-Tenant-Id") String tenantIdHeader,
+    @PostMapping("/create")
+    public ApiResponse<TenantDtos.CreateTenantResponse> createTenant(
             @RequestHeader("X-User-Id") String userIdHeader,
-            @Valid @RequestBody TenantDtos.UpdateRoleRequest request) {
+            @Valid @RequestBody TenantDtos.CreateTenantRequest request) {
         try {
-            long tenantId = RequestContextUtil.parseTenantId(tenantIdHeader);
             long userId = RequestContextUtil.parseUserId(userIdHeader);
 
-            TenantDtos.CommonResponse result = tenantMemberService.updateMemberRole(
-                    tenantId, userId, targetUserId, request.role());
+            TenantDtos.CreateTenantResponse result = tenantMemberService.createTenant(
+                    userId, request.tenantName());
 
-            if (result.success()) {
-                return ApiResponse.ok(null, RequestContextUtil.resolveRequestId(null, "req-update-role"));
-            } else {
-                return ApiResponse.error(ErrorCode.BUSINESS_ERROR.code(),
-                        result.message(), null);
-            }
+            return ApiResponse.ok(result, RequestContextUtil.resolveRequestId(null, "req-create-tenant"));
 
         } catch (Exception e) {
             return ApiResponse.error(ErrorCode.INTERNAL_ERROR.code(),
-                    "修改角色失败: " + e.getMessage(), null);
-        }
-    }
-
-    /**
-     * 移除成员
-     * DELETE /api/tenant/members/{userId}
-     */
-    @DeleteMapping("/members/{userId}")
-    public ApiResponse<Object> removeMember(
-            @PathVariable("userId") Long targetUserId,
-            @RequestHeader("X-Tenant-Id") String tenantIdHeader,
-            @RequestHeader("X-User-Id") String userIdHeader) {
-        try {
-            long tenantId = RequestContextUtil.parseTenantId(tenantIdHeader);
-            long userId = RequestContextUtil.parseUserId(userIdHeader);
-
-            TenantDtos.CommonResponse result = tenantMemberService.removeMember(
-                    tenantId, userId, targetUserId);
-
-            if (result.success()) {
-                return ApiResponse.ok(null, RequestContextUtil.resolveRequestId(null, "req-remove-member"));
-            } else {
-                return ApiResponse.error(ErrorCode.BUSINESS_ERROR.code(),
-                        result.message(), null);
-            }
-
-        } catch (Exception e) {
-            return ApiResponse.error(ErrorCode.INTERNAL_ERROR.code(),
-                    "移除成员失败: " + e.getMessage(), null);
+                    "创建工作室失败: " + e.getMessage(), null);
         }
     }
 
@@ -170,15 +137,15 @@ public class TenantMemberController {
             }
 
             // 获取租户信息
-            // 这里简化处理，实际应该重新生成 JWT token
-            // 前端可以直接更新 X-Tenant-Id header
+            Tenant tenant = tenantMapper.selectById(targetTenantId);
+            String tenantName = tenant != null ? tenant.getName() : "";
 
             return ApiResponse.ok(new TenantDtos.SwitchTenantResponse(
                     null, // token - 前端继续使用当前 token
                     3600, // expiresIn
                     userId,
                     targetTenantId,
-                    "", // tenantName - 需要查询获取
+                    tenantName,
                     tenantUser.getRole()
             ), RequestContextUtil.resolveRequestId(null, "req-switch-tenant"));
 
@@ -267,10 +234,17 @@ public class TenantMemberController {
     @DeleteMapping("/members/{memberId}")
     public ApiResponse<Void> removeMemberV2(
             @PathVariable("memberId") Long memberUserId,
-            @RequestHeader("X-Tenant-Id") String tenantIdHeader) {
+            @RequestHeader("X-Tenant-Id") String tenantIdHeader,
+            @RequestHeader(value = "X-User-Id", required = false) String userIdHeader) {
         try {
             long tenantId = RequestContextUtil.parseTenantId(tenantIdHeader);
-            long operatorId = RequestContextUtil.getCurrentUserId();
+            // 优先使用 X-User-Id header，fallback 到上下文
+            long operatorId;
+            if (userIdHeader != null && !userIdHeader.isBlank()) {
+                operatorId = RequestContextUtil.parseUserId(userIdHeader);
+            } else {
+                operatorId = RequestContextUtil.getCurrentUserId();
+            }
 
             tenantMemberService.removeMemberV2(tenantId, operatorId, memberUserId);
 
@@ -302,6 +276,32 @@ public class TenantMemberController {
         } catch (Exception e) {
             return ApiResponse.error(ErrorCode.INTERNAL_ERROR.code(),
                     "修改成员状态失败: " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 删除工作室/租户（仅 boss 可操作）
+     * DELETE /api/tenant/{tenantId}
+     */
+    @DeleteMapping("/{tenantId}")
+    public ApiResponse<Object> deleteTenant(
+            @PathVariable("tenantId") Long tenantId,
+            @RequestHeader("X-User-Id") String userIdHeader) {
+        try {
+            long userId = RequestContextUtil.parseUserId(userIdHeader);
+
+            TenantDtos.CommonResponse result = tenantMemberService.deleteTenant(userId, tenantId);
+
+            if (result.success()) {
+                return ApiResponse.ok(null, RequestContextUtil.resolveRequestId(null, "req-delete-tenant"));
+            } else {
+                return ApiResponse.error(ErrorCode.BUSINESS_ERROR.code(),
+                        result.message(), null);
+            }
+
+        } catch (Exception e) {
+            return ApiResponse.error(ErrorCode.INTERNAL_ERROR.code(),
+                    "删除工作室失败: " + e.getMessage(), null);
         }
     }
 

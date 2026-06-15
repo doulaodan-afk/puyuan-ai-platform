@@ -28,6 +28,12 @@ function hasRoutePermission(roleCode: string | null, roles?: string[]): boolean 
     'tenant_viewer': ['merchant_viewer', 'tenant_viewer'],
     // Super admin can access all pages
     'platform_super_admin': ['merchant_owner', 'merchant_operator', 'merchant_editor', 'merchant_viewer', 'boss', 'tenant_admin', 'tenant_operator', 'tenant_viewer', 'platform_super_admin'],
+    // AI 设计助手插件简化角色 → 后端角色的映射
+    'designer': ['merchant_editor', 'designer'],
+    'design_assistant': ['merchant_editor', 'design_assistant'],
+    'pattern_maker': ['merchant_editor', 'pattern_maker'],
+    'operator': ['merchant_operator', 'operator'],
+    'viewer': ['merchant_viewer', 'viewer'],
   };
 
   const mappedRoles = roleMap[roleCode] || [roleCode];
@@ -90,9 +96,12 @@ export function setupRouterGuards(router: Router): void {
       return { path: "/billing" };
     }
 
-    if (!hasRoutePermission(auth.roleCode, meta.roles as string[] | undefined)) {
-      console.log("[Router] No permission, redirect to forbidden. roleCode:", auth.roleCode, "roles:", meta.roles);
-      return { path: "/forbidden" };
+    // AI 设计助手插件路由有独立的身份守卫，全局守卫不做拦截
+    if (!to.path.startsWith('/plugins/ai-design-assistant')) {
+      if (!hasRoutePermission(auth.roleCode, meta.roles as string[] | undefined)) {
+        console.log("[Router] No permission, redirect to forbidden. roleCode:", auth.roleCode, "roles:", meta.roles);
+        return { path: "/forbidden" };
+      }
     }
 
     console.log("[Router] Navigation allowed");

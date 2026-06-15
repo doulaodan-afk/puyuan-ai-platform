@@ -113,4 +113,20 @@ public interface TenantMemberService {
     void recordAuditLog(Long tenantId, Long memberUserId, Long operatorUserId,
                         MemberRoleAuditLog.Action action, String oldRole, String newRole,
                         String oldStatus, String newStatus, String remark);
+
+    /**
+     * 创建新工作室/租户
+     * @param userId 创建者用户 ID
+     * @param tenantName 工作室名称
+     * @return 创建结果（包含租户ID、名称、编码、角色）
+     */
+    TenantDtos.CreateTenantResponse createTenant(Long userId, String tenantName);
+
+    /**
+     * 删除工作室/租户（仅创建者 boss 可操作）
+     * @param userId 操作者用户 ID
+     * @param tenantId 要删除的租户 ID
+     * @return 操作结果
+     */
+    TenantDtos.CommonResponse deleteTenant(Long userId, Long tenantId);
 }

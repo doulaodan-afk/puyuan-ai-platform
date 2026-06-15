@@ -25,13 +25,13 @@
             </div>
           </Transition>
         </div>
-        <RouterLink to="/admin/system-config">对象存储</RouterLink>
-        <RouterLink to="/admin/oss-statistics">存储统计</RouterLink>
-      </nav>
+        <RouterLink to="/admin/tenant-storage">对象存储</RouterLink>
+              </nav>
       <div class="actions">
         <ThemeToggle class="theme-toggle" />
-        <button class="icon-btn" @click="handleLogout" title="退出登录">
+        <button class="logout-btn-topbar" @click="handleLogout">
           <el-icon class="action-icon"><SwitchButton /></el-icon>
+          <span>退出</span>
         </button>
       </div>
     </header>
@@ -93,15 +93,11 @@
                 </RouterLink>
               </div>
             </div>
-            <RouterLink to="/admin/system-config" @click="mobileMenuOpen = false">
+            <RouterLink to="/admin/tenant-storage" @click="mobileMenuOpen = false">
               <el-icon><Setting /></el-icon>
               <span>对象存储</span>
             </RouterLink>
-            <RouterLink to="/admin/oss-statistics" @click="mobileMenuOpen = false">
-              <el-icon><DataAnalysis /></el-icon>
-              <span>存储统计</span>
-            </RouterLink>
-          </div>
+                      </div>
           <div class="mobile-nav-footer">
             <button class="logout-btn" @click="handleLogout">
               <el-icon><SwitchButton /></el-icon>
@@ -121,7 +117,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Menu, Close, SwitchButton, DataLine, OfficeBuilding, Grid, Tickets, Document, Goods, List, Setting, Cpu, ArrowDown, DataAnalysis } from '@element-plus/icons-vue'
+import { Menu, Close, SwitchButton, DataLine, OfficeBuilding, Grid, Tickets, Document, Goods, List, Setting, Cpu, ArrowDown } from '@element-plus/icons-vue'
 import ThemeToggle from "./components/ThemeToggle.vue";
 import { useAdminAuthStore } from "./stores/adminAuth";
 
@@ -344,23 +340,23 @@ function handleLogout() {
   margin: 0;
 }
 
-.icon-btn {
+.logout-btn-topbar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: none;
+  gap: 4px;
+  background: hsl(var(--destructive) / 0.1);
+  color: hsl(var(--destructive));
   border: none;
-  cursor: pointer;
-  padding: 8px;
   border-radius: calc(var(--radius) - 4px);
-  text-decoration: none;
-  color: hsl(var(--muted-foreground));
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
   transition: all 0.2s ease;
 }
 
-.icon-btn:hover {
-  background: hsl(var(--accent));
-  color: hsl(var(--foreground));
+.logout-btn-topbar:hover {
+  background: hsl(var(--destructive) / 0.2);
 }
 
 .action-icon {

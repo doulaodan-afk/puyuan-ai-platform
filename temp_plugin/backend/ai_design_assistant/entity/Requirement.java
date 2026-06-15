@@ -8,6 +8,7 @@ public class Requirement {
     private Long tenantId;
     private Long creatorId;
     private String title;
+    private String identityPrefix; // 身份前缀：工作室名称-角色
     private List<String> rawImages;
     private List<String> rawVideos;
     private String rawAudioUrl;
@@ -43,6 +44,8 @@ public class Requirement {
     public void setCreatorId(Long creatorId) { this.creatorId = creatorId; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+    public String getIdentityPrefix() { return identityPrefix; }
+    public void setIdentityPrefix(String identityPrefix) { this.identityPrefix = identityPrefix; }
     public List<String> getRawImages() { return rawImages; }
     public void setRawImages(List<String> rawImages) { this.rawImages = rawImages; }
     public List<String> getRawVideos() { return rawVideos; }

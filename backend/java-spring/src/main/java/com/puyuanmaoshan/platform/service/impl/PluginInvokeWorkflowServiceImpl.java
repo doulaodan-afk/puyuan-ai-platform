@@ -19,6 +19,7 @@ import com.puyuanmaoshan.platform.service.IdempotencyRecordService;
 import com.puyuanmaoshan.platform.service.PluginInvokeLogService;
 import com.puyuanmaoshan.platform.service.PluginInvokeWorkflowService;
 import com.puyuanmaoshan.platform.service.PluginService;
+import com.puyuanmaoshan.platform.service.PricingConfigService;
 import com.puyuanmaoshan.platform.service.TenantPluginService;
 import com.puyuanmaoshan.platform.util.BizNoUtil;
 import org.springframework.dao.DuplicateKeyException;
@@ -35,7 +36,6 @@ import java.util.Objects;
 
 @Service
 public class PluginInvokeWorkflowServiceImpl implements PluginInvokeWorkflowService {
-    private static final BigDecimal CASH_PER_TOKEN = new BigDecimal("0.0012");
 
     private final PluginService pluginService;
     private final TenantPluginService tenantPluginService;
@@ -44,6 +44,7 @@ public class PluginInvokeWorkflowServiceImpl implements PluginInvokeWorkflowServ
     private final PluginInvokeLogService pluginInvokeLogService;
     private final IdempotencyRecordService idempotencyRecordService;
     private final AuditLogService auditLogService;
+    private final PricingConfigService pricingConfigService;
     private final ObjectMapper objectMapper;
 
     public PluginInvokeWorkflowServiceImpl(PluginService pluginService,
@@ -53,6 +54,7 @@ public class PluginInvokeWorkflowServiceImpl implements PluginInvokeWorkflowServ
                                            PluginInvokeLogService pluginInvokeLogService,
                                            IdempotencyRecordService idempotencyRecordService,
                                            AuditLogService auditLogService,
+                                           PricingConfigService pricingConfigService,
                                            ObjectMapper objectMapper) {
         this.pluginService = pluginService;
         this.tenantPluginService = tenantPluginService;
@@ -61,6 +63,7 @@ public class PluginInvokeWorkflowServiceImpl implements PluginInvokeWorkflowServ
         this.pluginInvokeLogService = pluginInvokeLogService;
         this.idempotencyRecordService = idempotencyRecordService;
         this.auditLogService = auditLogService;
+        this.pricingConfigService = pricingConfigService;
         this.objectMapper = objectMapper;
     }
 
@@ -118,8 +121,9 @@ public class PluginInvokeWorkflowServiceImpl implements PluginInvokeWorkflowServ
         wallet.setTokenBalance(afterBalance);
         accountWalletService.updateById(wallet);
 
+        BigDecimal cashPerToken = pricingConfigService.getCashPerToken();
         BigDecimal cashAmount = BigDecimal.valueOf(tokenUsed)
-                .multiply(CASH_PER_TOKEN)
+                .multiply(cashPerToken)
                 .setScale(2, RoundingMode.HALF_UP);
 
         billingLedgerService.save(BillingLedger.builder()

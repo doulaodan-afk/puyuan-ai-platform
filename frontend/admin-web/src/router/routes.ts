@@ -113,34 +113,14 @@ export const adminRoutes: RouteRecordRaw[] = [
       roles: ["platform_super_admin", "platform_auditor"],
     },
   },
-  {
-    path: "/admin/oss-statistics",
-    name: "AdminOssStatistics",
-    component: () => import("../pages/AdminOssStatisticsPage.vue"),
+    {
+    path: "/admin/tenant-storage",
+    name: "AdminTenantStorage",
+    component: () => import("../pages/AdminTenantStoragePage.vue"),
     meta: {
-      title: "存储统计",
+      title: "对象存储",
       requiresAuth: true,
       roles: ["platform_super_admin", "platform_ops", "platform_finance"],
-    },
-  },
-  {
-    path: "/admin/oss-statistics",
-    name: "AdminOssStatistics",
-    component: () => import("../pages/AdminOssStatisticsPage.vue"),
-    meta: {
-      title: "存储统计",
-      requiresAuth: true,
-      roles: ["platform_super_admin", "platform_ops"],
-    },
-  },
-  {
-    path: "/admin/oss-statistics",
-    name: "AdminOssStatistics",
-    component: () => import("../pages/AdminOssStatisticsPage.vue"),
-    meta: {
-      title: "存储统计",
-      requiresAuth: true,
-      roles: ["platform_super_admin", "platform_ops"],
     },
   },
   {
@@ -148,7 +128,7 @@ export const adminRoutes: RouteRecordRaw[] = [
     name: "AdminSystemConfig",
     component: () => import("../pages/AdminSystemConfigPage.vue"),
     meta: {
-      title: "对象存储",
+      title: "系统配置",
       requiresAuth: true,
       roles: ["platform_super_admin"],
     },

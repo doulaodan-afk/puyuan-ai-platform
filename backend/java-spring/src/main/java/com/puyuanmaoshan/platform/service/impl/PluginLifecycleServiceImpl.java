@@ -186,8 +186,8 @@ public class PluginLifecycleServiceImpl implements PluginLifecycleService {
         copyDirectoryToOss(tempDir, resourcePath);
         log.info("前端资源复制完成");
 
-        // 构建 frontend_path（资源发布的根路径）
-        String frontendPath = appBaseUrl + "/uploads/" + resourcePath;
+        // 构建 frontend_path（资源发布的根路径，使用相对路径）
+        String frontendPath = "/uploads/" + resourcePath;
 
         log.info("========== [uploadPlugin] Step 8: 保存到数据库 ==========");
         // 保存/更新 plugin 记录

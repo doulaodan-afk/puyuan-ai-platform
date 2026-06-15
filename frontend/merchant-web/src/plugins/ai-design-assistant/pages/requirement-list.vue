@@ -1,12 +1,40 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getRequirementList } from '../api'
+import { getRequirementList, getIdentityPrefix, getIdentityRole } from '../api'
 import { useDesignAssistantStore } from '../stores'
 import type { RequirementListItem } from '../api'
 
 const router = useRouter()
 const store = useDesignAssistantStore()
+
+// 身份前缀
+const identityPrefix = computed(() => store.identity?.identityPrefix || getIdentityPrefix())
+const identityRole = computed(() => store.identity?.role || getIdentityRole())
+
+// 页面级权限兜底：非设计师/管理员 → 跳引导页
+const BOSS_ROLES = ['boss', 'merchant_owner', 'tenant_admin']
+const DESIGNER_ROLES = ['designer', 'merchant_editor']
+onMounted(() => {
+  const role = identityRole.value
+  if (!role) return
+  if (DESIGNER_ROLES.includes(role)) return // 设计师放行
+  if (BOSS_ROLES.includes(role)) {
+    // 管理员 → 引导邀请设计师
+    router.replace(`/plugins/ai-design-assistant/guide?target=${encodeURIComponent('/plugins/ai-design-assistant/list')}`)
+  }
+})
+
+// 页面标题根据角色变化
+const pageTitle = computed(() => {
+  switch (identityRole.value) {
+    case 'designer': return '我的设计需求'
+    case 'design_assistant': return '待处理需求'
+    case 'operator': return '需求概览'
+    case 'viewer': return '需求列表'
+    default: return '我的设计需求'
+  }
+})
 
 const requirements = ref<RequirementListItem[]>([])
 const loading = ref(false)
@@ -62,8 +90,13 @@ function getStatusClass(status: string) {
 <template>
   <div class="design-requirement-list page-container">
     <header class="header">
-      <h1>我的设计需求</h1>
-      <button @click="router.push('/plugins/ai-design-assistant/create')" class="btn btn-primary">
+      <div class="header-title-row">
+        <h1>{{ pageTitle }}</h1>
+        <span v-if="identityPrefix" class="identity-prefix-tag">
+          {{ identityPrefix }}
+        </span>
+      </div>
+      <button v-if="identityRole === 'designer'" @click="router.push('/plugins/ai-design-assistant/create')" class="btn btn-primary">
         + 创建新需求
       </button>
     </header>
@@ -83,7 +116,7 @@ function getStatusClass(status: string) {
 
     <div v-else-if="requirements.length === 0" class="empty">
       <p>暂无需求</p>
-      <button @click="router.push('/plugins/ai-design-assistant/create')" class="btn btn-secondary">
+      <button v-if="identityRole === 'designer'" @click="router.push('/plugins/ai-design-assistant/create')" class="btn btn-secondary">
         创建第一个需求
       </button>
     </div>

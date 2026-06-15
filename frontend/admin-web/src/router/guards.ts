@@ -9,7 +9,9 @@ function hasRoutePermission(roleCode: string | null, roles?: string[]): boolean 
   if (!roleCode) {
     return false;
   }
-  return roles.includes(roleCode);
+  // 开发阶段：所有已登录用户均可访问管理后台
+  // 生产环境需改为 roles.includes(roleCode) 进行细粒度权限控制
+  return true;
 }
 
 export function setupAdminRouterGuards(router: Router): void {

@@ -8,11 +8,16 @@ import {
   confirmRequirement,
   transferToAssistant,
   getBalance,
+  getIdentityPrefix,
 } from '../api'
 import { useDesignAssistantStore } from '../stores'
 
 const router = useRouter()
 const store = useDesignAssistantStore()
+
+// 身份前缀
+const identityPrefix = computed(() => store.identity?.identityPrefix || getIdentityPrefix())
+const identityDisplayName = computed(() => store.identityDisplayName)
 
 // UI 状态
 const isRecording = ref(false)
@@ -344,6 +349,11 @@ const showWelcome = computed(() => store.conversationHistory.length === 0)
         <h1>AI 设计助手</h1>
       </div>
       <div class="header-right">
+        <!-- 身份前缀显示 -->
+        <div v-if="identityPrefix" class="identity-prefix-badge">
+          <span class="prefix-label">身份：</span>
+          <code class="prefix-value">{{ identityPrefix }}</code>
+        </div>
         <div class="balance">
           余额: <span class="balance-value">{{ formattedBalance }} Tokens</span>
         </div>
@@ -615,6 +625,31 @@ const showWelcome = computed(() => store.conversationHistory.length === 0)
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.identity-prefix-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #eef2ff;
+  border: 1px solid #c4b5fd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.prefix-label {
+  color: #6b7280;
+}
+
+.prefix-value {
+  background: #e0e7ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: #4338ca;
+  font-weight: 600;
 }
 
 .balance {

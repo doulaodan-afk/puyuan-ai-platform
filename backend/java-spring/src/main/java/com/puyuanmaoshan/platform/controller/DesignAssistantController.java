@@ -271,17 +271,24 @@ public class DesignAssistantController {
 
     // ====== 面料库 ======
 
+    /**
+     * 获取面料库列表
+     * @param creatorId 面料特供商用户ID（可选——特供商只看自己的；设计师不传则看全工作室的）
+     */
     @GetMapping("/fabric-library/list")
     public ApiResponse<DesignAssistantDtos.FabricLibraryListResponse> getFabricLibraryList(
-            @RequestParam(required = false) Long supplierTenantId,
+            @RequestParam(required = false) Long creatorId,
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "true") boolean onlyVisible,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestHeader("X-Tenant-Id") String tenantId,
             @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
 
+        long parsedTenantId = RequestContextUtil.parseTenantId(tenantId);
+
         DesignAssistantDtos.FabricLibraryListResponse response = fabricLibraryService.getFabricLibraryList(
-            supplierTenantId, category, onlyVisible, page, size
+            parsedTenantId, creatorId, category, onlyVisible, page, size
         );
         return ApiResponse.ok(response, requestId);
     }
@@ -290,11 +297,13 @@ public class DesignAssistantController {
     public ApiResponse<DesignAssistantDtos.FabricInfo> getFabricDetail(
             @PathVariable Long fabricId,
             @RequestHeader("X-Tenant-Id") String tenantId,
+            @RequestHeader("X-User-Id") String userId,
             @RequestHeader(value = "X-Request-Id", required = false) String requestId) {
 
         long parsedTenantId = RequestContextUtil.parseTenantId(tenantId);
+        long parsedUserId = Long.parseLong(userId);
 
-        DesignAssistantDtos.FabricInfo response = fabricLibraryService.getFabricDetail(fabricId, parsedTenantId);
+        DesignAssistantDtos.FabricInfo response = fabricLibraryService.getFabricDetail(fabricId, parsedTenantId, parsedUserId);
         return ApiResponse.ok(response, requestId);
     }
 

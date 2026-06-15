@@ -33,7 +33,7 @@
               <el-option label="设计师" value="designer" />
               <el-option label="设计助理" value="design_assistant" />
               <el-option label="版师" value="pattern_maker" />
-              <el-option label="运营" value="operator" />
+              <el-option label="面料特供商" value="operator" />
               <el-option label="查看者" value="viewer" />
             </el-select>
           </template>
@@ -81,7 +81,7 @@
             <el-option label="设计师" value="designer" />
             <el-option label="设计助理" value="design_assistant" />
             <el-option label="版师" value="pattern_maker" />
-            <el-option label="运营" value="operator" />
+            <el-option label="面料特供商" value="operator" />
             <el-option label="查看者" value="viewer" />
           </el-select>
         </el-form-item>
@@ -106,6 +106,7 @@ import { ref, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { generateUUID } from '@/utils/uuid'
 
 interface MemberInfo {
   userId: number
@@ -132,15 +133,53 @@ const inviteForm = ref({
 })
 
 onMounted(async () => {
+  // 从 token 解析当前用户 ID（token 格式: token-{userId}-{tenantId}）
+  const tokenRaw = auth.accessToken.replace('Bearer ', '')
+  const tokenParts = tokenRaw.split('-')
+  currentUserId.value = tokenParts.length >= 2 ? Number(tokenParts[1]) : null
+
   await loadMembers()
 })
+
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Request-Id': generateUUID(),
+    'X-Tenant-Id': auth.tenantId,
+  }
+  if (auth.accessToken) {
+    headers['Authorization'] = `Bearer ${auth.accessToken}`
+  }
+  if (currentUserId.value) {
+    headers['X-User-Id'] = String(currentUserId.value)
+  }
+  return headers
+}
 
 async function loadMembers() {
   loading.value = true
   try {
-    members.value = await auth.getMembers()
+    const response = await fetch('/api/tenant/members', {
+      headers: getAuthHeaders(),
+    })
+    const payload = await response.json()
+    if (payload.code !== 0) {
+      throw new Error(payload.message || '获取成员列表失败')
+    }
+    const rawList: any[] = payload.data ?? []
+    members.value = rawList
+      .filter((item: any) => item.status === 'active')
+      .map((item: any) => ({
+        userId: item.user_id ?? item.userId,
+        nickname: item.nickname || '未设置',
+        mobile: item.mobile || '-',
+        role: item.role ?? item.role_code,
+        status: item.status || 'active',
+        inviterName: item.inviter_name ?? item.inviterName,
+        joinedAt: item.joined_at ?? item.joinedAt,
+      }))
   } catch (error: any) {
-    ElMessage.error('加载成员列表失败: ' + error.message)
+    ElMessage.error('加载成员列表失败: ' + (error.message || '未知错误'))
   } finally {
     loading.value = false
   }
@@ -158,17 +197,25 @@ async function handleInvite() {
 
   inviting.value = true
   try {
-    const result = await auth.inviteMember(inviteForm.value.mobile, inviteForm.value.role)
-    if (result.success) {
-      ElMessage.success(result.message)
+    const response = await fetch('/api/tenant/invite', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        mobile: inviteForm.value.mobile,
+        role: inviteForm.value.role,
+      }),
+    })
+    const payload = await response.json()
+    if (payload.code === 0) {
+      ElMessage.success(payload.message || '邀请成功')
       showInviteDialog.value = false
       inviteForm.value = { mobile: '', role: '', remark: '' }
       await loadMembers()
     } else {
-      ElMessage.error(result.message)
+      ElMessage.error(payload.message || '邀请失败')
     }
   } catch (error: any) {
-    ElMessage.error('邀请失败: ' + error.message)
+    ElMessage.error('邀请失败: ' + (error.message || '未知错误'))
   } finally {
     inviting.value = false
   }
@@ -176,37 +223,46 @@ async function handleInvite() {
 
 async function handleRoleChange(member: MemberInfo) {
   try {
-    const result = await auth.updateMemberRole(member.userId, member.role)
-    if (result.success) {
-      ElMessage.success(result.message)
+    const response = await fetch(`/api/tenant/members/${member.userId}/role`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ role_code: member.role }),
+    })
+    const payload = await response.json()
+    if (payload.code === 0) {
+      ElMessage.success(payload.message || '修改成功')
     } else {
-      ElMessage.error(result.message)
-      await loadMembers()
+      ElMessage.error(payload.message || '修改失败')
+      await loadMembers() // 还原
     }
   } catch (error: any) {
-    ElMessage.error('修改角色失败: ' + error.message)
-    await loadMembers()
+    ElMessage.error('修改角色失败: ' + (error.message || '未知错误'))
+    await loadMembers() // 还原
   }
 }
 
 async function handleRemove(member: MemberInfo) {
   try {
     await ElMessageBox.confirm(
-      `确定要移除成员 ${member.nickname} 吗？`,
+      `确定要移除成员「${member.nickname}」吗？`,
       '确认移除',
       { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
     )
 
-    const result = await auth.removeMember(member.userId)
-    if (result.success) {
-      ElMessage.success(result.message)
+    const response = await fetch(`/api/tenant/members/${member.userId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    })
+    const payload = await response.json()
+    if (payload.code === 0) {
+      ElMessage.success(payload.message || '移除成功')
       await loadMembers()
     } else {
-      ElMessage.error(result.message)
+      ElMessage.error(payload.message || '移除失败')
     }
   } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error('移除失败: ' + error.message)
+    if (error !== 'cancel' && error?.message !== 'cancel') {
+      ElMessage.error('移除失败: ' + (error.message || '未知错误'))
     }
   }
 }

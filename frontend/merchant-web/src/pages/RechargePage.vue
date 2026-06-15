@@ -10,7 +10,7 @@
     <section class="plan-grid">
       <article v-for="amount in amounts" :key="amount" class="plan-card">
         <h3>{{ amount }} 元</h3>
-        <p>预计到账 Token：{{ amount * 2000 }}</p>
+        <p>预计到账 Token：{{ amount * tokenRatio }}</p>
         <button @click="createOrder(amount)" :disabled="creating">{{ creating ? "创建中..." : "立即充值" }}</button>
       </article>
     </section>
@@ -37,6 +37,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { buildMerchantHeaders, merchantRequest } from "../utils/http";
+import { generateUUID } from "../utils/uuid";
 
 interface RechargeOrderItem {
   order_no: string;
@@ -59,6 +60,18 @@ const creating = ref(false);
 const confirmingOrderNo = ref("");
 const errorMessage = ref("");
 const orders = ref<RechargeOrderItem[]>([]);
+const tokenRatio = ref(10); // 默认 1:10，从后端动态获取
+
+async function loadPricing() {
+  try {
+    const data = await merchantRequest<{ token_ratio: number }>("/api/v1/account/pricing");
+    if (data?.token_ratio && data.token_ratio > 0) {
+      tokenRatio.value = data.token_ratio;
+    }
+  } catch (error) {
+    console.warn("获取定价配置失败，使用默认兑换率 1:10:", error);
+  }
+}
 
 async function loadOrders() {
   loading.value = true;
@@ -81,7 +94,7 @@ async function createOrder(amount: number) {
       method: "POST",
       headers: {
         ...buildMerchantHeaders({ "Content-Type": "application/json" }),
-        "Idempotency-Key": `recharge-create-${crypto.randomUUID()}`,
+        "Idempotency-Key": `recharge-create-${generateUUID()}`,
       },
       body: JSON.stringify({ amount, pay_channel: "wechat_pay" }),
     });
@@ -138,6 +151,7 @@ async function confirmPaid(orderNo: string) {
 }
 
 onMounted(() => {
+  void loadPricing();
   void loadOrders();
 });
 </script>
@@ -158,14 +172,26 @@ onMounted(() => {
 
 .plan-card,
 .panel {
-  background: #fff;
-  border: 1px solid #d8e0f0;
-  border-radius: 8px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
   padding: 12px;
+}
+
+.plan-card h3 {
+  color: hsl(var(--foreground));
+}
+
+.plan-card p {
+  color: hsl(var(--muted-foreground));
 }
 
 .panel {
   margin-top: 12px;
+}
+
+.panel h2 {
+  color: hsl(var(--foreground));
 }
 
 .order-list {
@@ -180,32 +206,48 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px dashed #d8e0f0;
-  border-radius: 8px;
+  border: 1px dashed hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
   padding: 10px;
+}
+
+.order-list li strong {
+  color: hsl(var(--foreground));
+}
+
+.order-list li p {
+  color: hsl(var(--muted-foreground));
 }
 
 button {
   border: none;
-  border-radius: 6px;
+  border-radius: calc(var(--radius) - 4px);
   padding: 6px 10px;
-  background: #2e5fd7;
-  color: #fff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
 button:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .paid {
-  color: #1f8b4c;
+  color: hsl(142, 71%, 45%);
+  font-weight: 500;
 }
 
 .error {
-  color: #c83a28;
+  color: hsl(var(--destructive));
 }
 
 .empty {
-  color: #5c6a82;
+  color: hsl(var(--muted-foreground));
 }
 </style>

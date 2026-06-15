@@ -509,7 +509,7 @@
                                                                      }
                                                                  ],
                                                       "url":  "{{base_url}}/api/v1/admin/pricing",
-                                                      "description":  "Sample response data: { token_price_per_1k, storage_price_per_gb_month, free_token_quota_month, free_storage_quota_gb }"
+                                                      "description":  "Sample response data: { register_bonus_token }"
                                                   }
                                   },
                                   {
@@ -530,7 +530,7 @@
                                                       "description":  "Sample response: same structure as request in data field.",
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"token_price_per_1k\": 1.2,\n  \"storage_price_per_gb_month\": 0.5,\n  \"free_token_quota_month\": 100000,\n  \"free_storage_quota_gb\": 5\n}",
+                                                                   "raw":  "{\n  \"register_bonus_token\": 1000\n}",
                                                                    "options":  {
                                                                                    "raw":  {
                                                                                                "language":  "json"

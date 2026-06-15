@@ -6,12 +6,16 @@ import {
   updateTaskStatus,
   shipTask,
   uploadTaskResult,
+  getIdentityPrefix,
 } from '../api'
 import { useDesignAssistantStore } from '../stores'
 import type { TaskInfo } from '../api'
 
 const router = useRouter()
 const store = useDesignAssistantStore()
+
+// 身份前缀
+const identityPrefix = computed(() => store.identity?.identityPrefix || getIdentityPrefix())
 
 // 筛选状态
 const activeTab = ref('pending')
@@ -246,7 +250,14 @@ function formatDate(dateStr: string | null) {
 <template>
   <div class="my-tasks-page page-container">
     <header class="header">
-      <h1>我的任务 <span v-if="pendingCount > 0" class="badge">{{ pendingCount }}</span></h1>
+      <div class="header-left-section">
+        <div class="header-title-row">
+          <h1>我的任务 <span v-if="pendingCount > 0" class="badge">{{ pendingCount }}</span></h1>
+          <span v-if="identityPrefix" class="identity-prefix-tag">
+            {{ identityPrefix }}
+          </span>
+        </div>
+      </div>
       <div class="filters">
         <select v-model="taskTypeFilter" @change="fetchTasks" class="filter-select">
           <option value="">全部类型</option>
@@ -480,12 +491,39 @@ function formatDate(dateStr: string | null) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-left-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .header h1 {
   margin: 0;
   color: hsl(var(--foreground));
   font-size: 24px;
+}
+
+.identity-prefix-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  background: #eef2ff;
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #4338ca;
+  font-weight: 500;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
 }
 
 .badge {

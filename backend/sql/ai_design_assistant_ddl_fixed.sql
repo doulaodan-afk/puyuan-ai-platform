@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS `plugin_config` (
 -- 插入AI设计助手插件
 INSERT INTO `plugin` (`id`, `plugin_id`, `name`, `version`, `backend_api`, `frontend_entry`, `billing_type`, `default_token_cost`, `status`, `review_status`, `created_at`, `updated_at`)
 VALUES
-(3020, 'ai_design_assistant', 'AI设计助手', '1.0.0', '/api/plugin/invoke/ai_design_assistant', '/design-requirement/create', 'token', 5, 1, 'pass', NOW(), NOW())
+(3020, 'ai_design_assistant', 'AI设计助手', '1.0.0', '/api/plugin/invoke/ai_design_assistant', '/design-requirement/create', 'token', 3, 1, 'pass', NOW(), NOW())
 ON DUPLICATE KEY UPDATE
 name = VALUES(name),
 version = VALUES(version),
@@ -206,8 +206,8 @@ VALUES
 INSERT INTO `plugin_config` (`plugin_code`, `config_key`, `config_value`, `description`)
 VALUES
 ('ai_design_assistant', 'system_prompt', '你是一个专业的服装设计专家，帮助设计师完善需求。', 'AI对话系统提示词'),
-('ai_design_assistant', 'token_cost_per_chat', '5', '每次对话消耗Token数'),
-('ai_design_assistant', 'token_cost_summarize', '15', '生成总结消耗Token数'),
+('ai_design_assistant', 'token_cost_per_chat', '3', '每次对话消耗Token数'),
+('ai_design_assistant', 'token_cost_summarize', '5', '生成总结消耗Token数'),
 ('ai_design_assistant', 'remind_times', '09:00,14:00,18:00', '催办时间点')
 ON DUPLICATE KEY UPDATE config_value=VALUES(config_value);
 

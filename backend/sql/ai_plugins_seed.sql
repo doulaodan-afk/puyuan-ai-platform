@@ -4,7 +4,7 @@
 -- 插入 AI 图片生成插件
 INSERT INTO plugin (id, plugin_id, name, version, backend_api, frontend_entry, billing_type, default_token_cost, status, review_status, created_at, updated_at)
 VALUES
-  (3010, 'ai_image_gen', 'AI 商品图生成', '1.0.0', '/api/plugin/invoke/ai_image_gen', '/ai-tools/image-gen', 'token', 20, 1, 'pass', NOW(), NOW())
+  (3010, 'ai_image_gen', 'AI 商品图生成', '1.0.0', '/api/plugin/invoke/ai_image_gen', '/ai-tools/image-gen', 'token', 10, 1, 'pass', NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   version = VALUES(version),
@@ -19,7 +19,7 @@ ON DUPLICATE KEY UPDATE
 -- 插入 AI 脚本生成插件
 INSERT INTO plugin (id, plugin_id, name, version, backend_api, frontend_entry, billing_type, default_token_cost, status, review_status, created_at, updated_at)
 VALUES
-  (3011, 'ai_script_gen', 'AI 视频脚本生成', '1.0.0', '/api/plugin/invoke/ai_script_gen', '/ai-tools/script-gen', 'token', 20, 1, 'pass', NOW(), NOW())
+  (3011, 'ai_script_gen', 'AI 视频脚本生成', '1.0.0', '/api/plugin/invoke/ai_script_gen', '/ai-tools/script-gen', 'token', 10, 1, 'pass', NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   version = VALUES(version),
@@ -34,7 +34,7 @@ ON DUPLICATE KEY UPDATE
 -- 插入 AI 跨境翻译插件
 INSERT INTO plugin (id, plugin_id, name, version, backend_api, frontend_entry, billing_type, default_token_cost, status, review_status, created_at, updated_at)
 VALUES
-  (3012, 'ai_translate', 'AI 跨境翻译', '1.0.0', '/api/plugin/invoke/ai_translate', '/ai-tools/translate', 'token', 5, 1, 'pass', NOW(), NOW())
+  (3012, 'ai_translate', 'AI 跨境翻译', '1.0.0', '/api/plugin/invoke/ai_translate', '/ai-tools/translate', 'token', 3, 1, 'pass', NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   version = VALUES(version),

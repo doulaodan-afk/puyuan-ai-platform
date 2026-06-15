@@ -8,6 +8,15 @@
       </div>
 
       <div class="plugin-nav">
+        <!-- 身份标识 -->
+        <div v-if="store.identity" class="identity-badge" @click="handleSwitchIdentity" title="点击切换身份">
+          <span class="identity-icon">🏢</span>
+          <span class="identity-text">{{ store.identity.tenantName }}</span>
+          <span class="identity-separator">·</span>
+          <span class="identity-role">{{ store.identity.roleLabel }}</span>
+          <span class="identity-switch-hint">🔄</span>
+        </div>
+
         <!-- 插件菜单 -->
         <nav class="plugin-menu">
           <RouterLink
@@ -37,13 +46,16 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useDesignAssistantStore } from '../stores'
 
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
+const store = useDesignAssistantStore()
 
 // 定义设计助手插件内的所有菜单项
 interface MenuItem {
@@ -55,48 +67,56 @@ interface MenuItem {
 }
 
 const pluginMenus: MenuItem[] = [
+  // boss 管理看板 - 查看工作室所有工作情况
+  {
+    path: '/plugins/ai-design-assistant/board',
+    name: '管理看板',
+    icon: '👑',
+    roles: ['boss'],
+  },
+  // 创建设计需求 - 设计师和 boss 可创建
   {
     path: '/plugins/ai-design-assistant/create',
     name: '创建设计需求',
     icon: '✨',
-    roles: ['boss', 'designer', 'design_assistant', 'operator'],
+    roles: ['designer'],
   },
+  // 我的设计需求 - 各角色看自己创建的
   {
     path: '/plugins/ai-design-assistant/list',
     name: '我的设计需求',
     icon: '📋',
-    roles: ['boss', 'designer', 'design_assistant', 'operator', 'viewer'],
+    roles: ['designer', 'design_assistant', 'operator', 'viewer'],
   },
+  // 设计助理待办
   {
     path: '/plugins/ai-design-assistant/pending',
     name: '设计助理待办',
     icon: '🔔',
-    roles: ['boss', 'design_assistant'],
+    roles: ['design_assistant'],
   },
+  // 我的任务
   {
     path: '/plugins/ai-design-assistant/tasks',
     name: '我的任务',
     icon: '✅',
-    roles: ['boss', 'designer', 'pattern_maker', 'operator', 'viewer'],
+    roles: ['designer', 'pattern_maker', 'operator', 'viewer'],
   },
+  // 消息中心
   {
     path: '/plugins/ai-design-assistant/messages',
     name: '消息中心',
     icon: '💬',
     roles: ['boss', 'designer', 'design_assistant', 'pattern_maker', 'operator', 'viewer'],
   },
-  {
-    path: '/plugins/ai-design-assistant/board',
-    name: '任务看板',
-    icon: '📊',
-    roles: ['boss', 'designer', 'design_assistant', 'operator', 'viewer'],
-  },
+  // 面料库管理
   {
     path: '/plugins/ai-design-assistant/fabrics',
     name: '面料库管理',
     icon: '🧵',
-    roles: ['boss', 'operator'],
+    roles: ['operator'],
   },
+  // boss 专属管理菜单
   {
     path: '/plugins/ai-design-assistant/settings',
     name: '成员管理',
@@ -111,9 +131,9 @@ const pluginMenus: MenuItem[] = [
   },
 ]
 
-// 根据当前角色过滤菜单
+// 根据当前身份角色过滤菜单（优先使用插件身份角色，回退到系统角色）
 const visibleMenus = computed(() => {
-  const currentRole = auth.currentRole
+  const currentRole = store.identity?.role || auth.currentRole
   if (!currentRole) {
     return pluginMenus
   }
@@ -126,6 +146,14 @@ function isActiveRoute(menuPath: string): boolean {
     return route.path === '/plugins/ai-design-assistant' || route.path === '/plugins/ai-design-assistant/list'
   }
   return route.path.startsWith(menuPath)
+}
+
+// 切换身份
+function handleSwitchIdentity() {
+  // 清除当前身份并跳转到身份选择页
+  store.clearIdentity()
+  store.resetAll()
+  router.push('/plugins/ai-design-assistant/identity')
 }
 </script>
 
@@ -142,6 +170,8 @@ function isActiveRoute(menuPath: string): boolean {
   padding: 12px 24px;
   background: hsl(var(--card));
   border-bottom: 1px solid hsl(var(--border));
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .plugin-brand {
@@ -164,6 +194,57 @@ function isActiveRoute(menuPath: string): boolean {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+/* 身份标识 */
+.identity-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+  border: 1px solid #c4b5fd;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.identity-badge:hover {
+  background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+  border-color: #a78bfa;
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.15);
+}
+
+.identity-icon {
+  font-size: 14px;
+}
+
+.identity-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4338ca;
+}
+
+.identity-separator {
+  color: #a5b4fc;
+  font-weight: 300;
+}
+
+.identity-role {
+  font-size: 13px;
+  color: #6d28d9;
+}
+
+.identity-switch-hint {
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  margin-left: 2px;
+}
+
+.identity-badge:hover .identity-switch-hint {
+  opacity: 0.7;
 }
 
 .plugin-menu {

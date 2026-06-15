@@ -36,6 +36,24 @@ public class Tenant {
     @TableField("tenant_type")
     private String tenantType;
 
+    @TableField("logo_url")
+    private String logoUrl;
+
+    @TableField("industry")
+    private String industry;
+
+    @TableField("contact_phone")
+    private String contactPhone;
+
+    @TableField("contact_email")
+    private String contactEmail;
+
+    @TableField("address")
+    private String address;
+
+    @TableField("description")
+    private String description;
+
     @TableField("created_at")
     private LocalDateTime createdAt;
 
